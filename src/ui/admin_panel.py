@@ -10,6 +10,7 @@ It provides real-time visibility into:
 """
 from __future__ import annotations
 
+import asyncio
 import os
 import pandas as pd
 import plotly.graph_objects as go
@@ -433,7 +434,7 @@ class AdminPanel:
                                     key="kb_test")
             if test_q and st.button("Query KB", key="kb_query"):
                 with st.spinner("Retrieving…"):
-                    results = self._kb.query(test_q, top_k=3)
+                    results = asyncio.run(self._kb.query(test_q, top_k=3))
                 if results:
                     for r in results:
                         st.markdown(
