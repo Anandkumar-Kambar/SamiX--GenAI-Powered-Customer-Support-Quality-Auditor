@@ -18,22 +18,24 @@ Data Collections:
 from __future__ import annotations
 
 import io
+import asyncio
 import json
 import os
+import re
 import textwrap
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
-from typing import Optional, Any
+from typing import Optional, Any, Iterable
 
 import streamlit as st
 
 
 # RAG Configuration 
 
-CHUNK_SIZE     = 500      # Optimized for MiniLM context window.
-CHUNK_OVERLAP  = 50       # Preservation of context across boundaries.
-TOP_K          = 4        # Number of chunks provided to the LLM.
-EMBED_MODEL    = "all-MiniLM-L6-v2"
+CHUNK_SIZE     = 800      # Increased for BGE-small's 512 token limit (~800-1000 chars)
+CHUNK_OVERLAP  = 100
+TOP_K          = 5
+EMBED_MODEL    = "BAAI/bge-small-en-v1.5"
 MILVUS_DB      = "milvus_lite.db"
 META_PATH      = "data/kb/kb_meta.json"
 KB_DIR         = "data/kb"
@@ -366,13 +368,59 @@ class KBManager:
         top_k:      int,
         collection: Optional[str],
     ) -> list[RAGResult]:
-        """ Synchronous backend for the query method. """
+        """ Hybrid Query: Combines Vector Search (Milvus) and Keyword Search (BM25). """
         cols = [collection] if collection else COLLECTIONS
-        results: list[RAGResult] = []
+        all_vector_results: list[RAGResult] = []
+        all_keyword_results: list[RAGResult] = []
+        
         for col in cols:
-            results.extend(self._query_collection(question, col, top_k))
-        results.sort(key=lambda r: r.score, reverse=True)
-        return results[:top_k]
+            # 1. Vector Search
+            store = self._stores.get(col)
+            if store:
+                all_vector_results.extend(self._milvus_query(store, question, col, top_k * 2))
+            
+            # 2. Keyword Search (BM25)
+            all_keyword_results.extend(self._bm25_query(question, col, top_k * 2))
+
+        # 3. Reciprocal Rank Fusion (RRF)
+        return self._fuse_results(all_vector_results, all_keyword_results, top_k)
+
+    def _fuse_results(
+        self, 
+        vector_res: list[RAGResult], 
+        keyword_res: list[RAGResult], 
+        top_k: int,
+        k: int = 60
+    ) -> list[RAGResult]:
+        """ 
+        Standard Reciprocal Rank Fusion (RRF) to merge two ranked lists. 
+        Formula: score = sum(1 / (k + rank))
+        """
+        scores: dict[str, float] = {}
+        metadata: dict[str, RAGResult] = {}
+
+        # Rank vector results
+        for rank, res in enumerate(vector_res, 1):
+            scores[res.text] = scores.get(res.text, 0) + 1.0 / (k + rank)
+            metadata[res.text] = res
+
+        # Rank keyword results
+        for rank, res in enumerate(keyword_res, 1):
+            scores[res.text] = scores.get(res.text, 0) + 1.0 / (k + rank)
+            if res.text not in metadata:
+                metadata[res.text] = res
+
+        # Sort by fused score
+        fused = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+        
+        final_results = []
+        for text, score in fused[:top_k]:
+            res = metadata[text]
+            # Normalize score for UI (heuristic)
+            res.score = min(0.99, round(score * k, 3)) 
+            final_results.append(res)
+            
+        return final_results
 
     async def get_live_suggestions(self, text: str) -> list[str]:
         """
@@ -540,6 +588,70 @@ class KBManager:
         except Exception:
             return []
 
+    def _bm25_query(
+        self,
+        question:   str,
+        collection: str,
+        top_k:      int,
+    ) -> list[RAGResult]:
+        """ 
+        Modern keyword search using BM25 algorithm.
+        Dynamically builds the index from local chunk backups.
+        """
+        try:
+            from rank_bm25 import BM25Okapi
+            
+            # 1. Collect all chunks for this collection
+            corpus_chunks: list[tuple[str, str]] = [] # (text, source)
+            for fname in os.listdir(KB_DIR):
+                if not fname.endswith(".chunks.txt"):
+                    continue
+                # Simple collection filter (assumes source metadata handling is consistent)
+                source = fname.replace(".chunks.txt", "")
+                
+                # We need to verify which collection this file belongs to.
+                # If we don't have perfect mapping, we search all chunks but filter by metadata if available.
+                # For now, we'll load everything and filter.
+                try:
+                    with open(os.path.join(KB_DIR, fname), encoding="utf-8") as fh:
+                        content = fh.read()
+                    for chunk in content.split("---CHUNK---\n"):
+                        chunk = chunk.strip()
+                        if chunk:
+                            corpus_chunks.append((chunk, source))
+                except Exception:
+                    continue
+
+            if not corpus_chunks:
+                return []
+
+            # 2. Tokenize and index
+            tokenized_corpus = [c[0].lower().split() for c in corpus_chunks]
+            bm25 = BM25Okapi(tokenized_corpus)
+            
+            # 3. Query
+            tokenized_query = question.lower().split()
+            doc_scores = bm25.get_scores(tokenized_query)
+            
+            # 4. Format results
+            indices = sorted(range(len(doc_scores)), key=lambda i: doc_scores[i], reverse=True)
+            results = []
+            max_score = doc_scores[indices[0]] if indices and doc_scores[indices[0]] > 0 else 1
+            
+            for i in indices[:top_k]:
+                if doc_scores[i] <= 0: break
+                text, source = corpus_chunks[i]
+                results.append(RAGResult(
+                    text=text,
+                    source=source,
+                    collection=collection,
+                    score=round(doc_scores[i] / max_score, 3)
+                ))
+            return results
+        except Exception as exc:
+            st.warning(f"BM25 Error: {exc}")
+            return self._keyword_query(question, collection, top_k)
+
     def _keyword_query(
         self,
         question:   str,
@@ -601,17 +713,25 @@ class KBManager:
         """ Splits text into smaller, overlapping chunks for optimal retrieval. """
         try:
             from langchain_text_splitters import RecursiveCharacterTextSplitter
+            # Improved separators for better semantic boundaries
             splitter = RecursiveCharacterTextSplitter(
                 chunk_size=CHUNK_SIZE,
                 chunk_overlap=CHUNK_OVERLAP,
-                separators=["\n\n", "\n", ". ", " ", ""],
+                separators=["\n\n", "\n", ". ", "! ", "? ", "; ", " ", ""],
+                add_start_index=True,
             )
             return [c for c in splitter.split_text(text) if c.strip()]
         except Exception:
-            # Fail-safe word-based chunking.
-            words = text.split()
-            return [
-                " ".join(words[i: i + CHUNK_SIZE])
-                for i in range(0, len(words), CHUNK_SIZE)
-                if words[i: i + CHUNK_SIZE]
-            ]
+            # Plan B: sentence-aware chunking if possible
+            import re
+            sentences = re.split(r'(?<=[.!?])\s+', text)
+            chunks = []
+            curr = ""
+            for s in sentences:
+                if len(curr) + len(s) < CHUNK_SIZE:
+                    curr += " " + s
+                else:
+                    chunks.append(curr.strip())
+                    curr = s
+            if curr: chunks.append(curr.strip())
+            return [c for c in chunks if c]
