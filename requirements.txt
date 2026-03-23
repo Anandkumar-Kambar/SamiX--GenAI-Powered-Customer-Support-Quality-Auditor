@@ -4,6 +4,9 @@ streamlit-authenticator>=0.3.2
 streamlit-echarts>=0.4.0
 audio-recorder-streamlit>=0.0.10
 
+# Image Processing
+Pillow>=10.0.0
+
 # AI & Language Models (Groq API) 
 groq>=0.9.0
 

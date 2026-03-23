@@ -219,6 +219,16 @@ class KBManager:
     def _init_embeddings(self) -> None:
         """ Loads the local HuggingFace embedding model. """
         try:
+            # Suppress noisy architectural warnings (e.g., position_ids UNEXPECTED)
+            import logging
+            from transformers import logging as transformers_logging
+            transformers_logging.set_verbosity_error()
+            
+            # Check for HF_TOKEN to enable higher rate limits if provided
+            hf_token = os.getenv("HF_TOKEN") or st.secrets.get("HF_TOKEN")
+            if hf_token:
+                os.environ["HF_TOKEN"] = hf_token
+            
             from langchain_huggingface import HuggingFaceEmbeddings
             self._embeddings = HuggingFaceEmbeddings(
                 model_name=EMBED_MODEL,
@@ -437,31 +447,39 @@ class KBManager:
         """
         Determines the factual accuracy of an agent's statement asynchronously.
         """
-        chunks = await self.query(context_question, top_k=TOP_K)
         if not chunks:
             return {
                 "answer":        "No relevant policy found in Knowledge Base.",
                 "citations":     [],
                 "groundedness":  0.0,
                 "policy_breach": False,
+                "top_source":    "Unknown",
+                "top_score":     0.0,
             }
 
-        context_text = "\n\n".join(
-            f"[{r.source}]\n{r.text}" for r in chunks
-        )
         groundedness = round(
             sum(r.score for r in chunks) / len(chunks), 3
-        )
-        citations = [r.to_citation() for r in chunks]
+        ) if chunks else 0.0
+        citations = [r.to_citation() for r in chunks] if chunks else []
 
         # Factual integrity check logic.
-        top = chunks[0].text.lower()
-        stmt_lower = agent_statement.lower()
+        if not chunks or not chunks[0]:
+            return {
+                "answer":        "No relevant policy found in Knowledge Base.",
+                "citations":     [],
+                "groundedness":  0.0,
+                "policy_breach": False,
+                "top_source":    "Unknown",
+                "top_score":     0.0,
+            }
+        
+        top = chunks[0].text.lower() if chunks[0].text else ""
+        stmt_lower = agent_statement.lower() if agent_statement else ""
 
         # Heuristic: Numeric discrepancy check (highly accurate for SLA/Price leaks).
         import re
-        nums_policy = set(re.findall(r"\d+", top))
-        nums_agent  = set(re.findall(r"\d+", stmt_lower))
+        nums_policy = set(re.findall(r"\d+", top)) if top else set()
+        nums_agent  = set(re.findall(r"\d+", stmt_lower)) if stmt_lower else set()
         policy_breach = bool(
             nums_agent and nums_policy and
             not nums_agent.intersection(nums_policy) and

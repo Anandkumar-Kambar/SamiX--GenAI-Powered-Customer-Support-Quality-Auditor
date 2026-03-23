@@ -21,21 +21,21 @@ from src.utils.history_manager import HistoryManager
 from src.utils.kb_manager      import KBManager
 
 
-def _line(x, y, colour="#EB643E", height=180, y_min=None, y_max=None, fill=True):
+def _line(x, y, colour="#152EAE", height=180, y_min=None, y_max=None, fill=True):
     fig = go.Figure(go.Scatter(
         x=x, y=y, mode="lines+markers",
-        line=dict(color=colour, width=2),
-        marker=dict(size=4, color=colour),
+        line=dict(color=colour, width=2.5),
+        marker=dict(size=5, color=colour),
         fill="tozeroy" if fill else None,
-        fillcolor="rgba(235,100,62,0.04)" if fill else None,
+        fillcolor="rgba(21, 46, 174, 0.04)" if fill else None,
     ))
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="#FFFFFF",
-        font=dict(family="Sora, sans-serif", color="#64748B", size=9),
+        font=dict(family="Inter, sans-serif", color="#64748B", size=9),
         margin=dict(l=0,r=0,t=4,b=0), height=height,
         yaxis=dict(
             range=[y_min, y_max] if y_min is not None else None,
-            gridcolor="rgba(0,0,0,0.05)",
+            gridcolor="#F1F5F9",
         ),
         xaxis=dict(gridcolor="rgba(0,0,0,0)"),
         showlegend=False,
@@ -43,20 +43,20 @@ def _line(x, y, colour="#EB643E", height=180, y_min=None, y_max=None, fill=True)
     return fig
 
 
-def _bar(x, y, colour="#EB643E", height=180, y_min=None, y_max=None):
+def _bar(x, y, colour="#152EAE", height=180, y_min=None, y_max=None):
     fig = go.Figure(go.Bar(
         x=x, y=y,
         marker_color=colour,
-        marker_line_color="rgba(235,100,62,0.3)",
+        marker_line_color="#E2E8F0",
         marker_line_width=1,
     ))
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="#FFFFFF",
-        font=dict(family="Sora, sans-serif", color="#64748B", size=9),
+        font=dict(family="Inter, sans-serif", color="#64748B", size=9),
         margin=dict(l=0,r=0,t=4,b=0), height=height,
         yaxis=dict(
             range=[y_min, y_max] if y_min is not None else None,
-            gridcolor="rgba(0,0,0,0.05)",
+            gridcolor="#F1F5F9",
         ),
         xaxis=dict(gridcolor="rgba(0,0,0,0)"),
         showlegend=False,
@@ -67,12 +67,12 @@ def _bar(x, y, colour="#EB643E", height=180, y_min=None, y_max=None):
 def _tbl_html(rows: list[tuple[str,str]]) -> str:
     items = "".join(
         f'<div style="display:flex;justify-content:space-between;'
-        f'padding:4px 0;border-bottom:1px solid rgba(0,0,0,.05);">'
-        f'<span style="color:#64748B;">{k}</span>'
-        f'<span style="color:#212529;font-weight:500;">{v}</span></div>'
+        f'padding:6px 0;border-bottom:1px solid #F1F5F9;">'
+        f'<span style="color:#64748B;font-weight:500;">{k}</span>'
+        f'<span style="color:#0F172A;font-weight:700;">{v}</span></div>'
         for k, v in rows
     )
-    return f'<div style="font-family:Sora,sans-serif;font-size:.78rem;">{items}</div>'
+    return f'<div style="font-family:Inter,sans-serif;font-size:.82rem;">{items}</div>'
 
 
 DAYS = ["3/5","3/6","3/7","3/8","3/9","3/10","3/11",
@@ -142,21 +142,21 @@ class AdminPanel:
             fig = _line(DAYS, scores, y_min=55, y_max=90)
             fig.add_hline(y=60, line_dash="dash", line_color="rgba(239,68,68,.4)",
                           annotation_text="Fail threshold", annotation_font_size=8)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
         with col_donut:
             st.markdown("##### Verdict split")
             fig2 = go.Figure(go.Pie(
                 labels=["Excellent","Good","Needs work","Fail"],
-                values=[18,41,28,13], hole=0.68,
-                marker_colors=["#10B981","#EB643E","#F59E0B","#EF4444"],
+                values=[18,41,28,13], hole=0.72,
+                marker_colors=["#10B981","#152EAE","#F59E0B","#EF4444"],
             ))
             fig2.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)", showlegend=True,
-                legend=dict(font=dict(color="#94A3B8",size=9)),
+                legend=dict(font=dict(color="#64748B",size=9)),
                 margin=dict(l=0,r=0,t=4,b=0), height=180,
             )
-            st.plotly_chart(fig2, use_container_width=True)
+            st.plotly_chart(fig2, width="stretch")
 
         col_lb, col_viol = st.columns(2)
         with col_lb:
@@ -170,7 +170,7 @@ class AdminPanel:
                 cn.caption(name)
                 cb.progress(score/100)
                 cs.markdown(
-                    f'<div style="font-family:Sora,sans-serif;font-size:.9rem;font-weight:600;'
+                    f'<div style="font-family:Inter,sans-serif;font-size:.9rem;font-weight:700;'
                     f'color:{colour};">{score}</div>', unsafe_allow_html=True
                 )
 
@@ -181,7 +181,7 @@ class AdminPanel:
                 {"Agent":"Priya M.", "Type":"False close",       "Sev":"Critical","Time":"09:38"},
                 {"Agent":"James T.", "Type":"Script missed",     "Sev":"High",    "Time":"09:21"},
                 {"Agent":"Rita S.",  "Type":"Empathy gap",       "Sev":"Medium",  "Time":"08:55"},
-            ]), use_container_width=True, hide_index=True)
+            ]), width="stretch", hide_index=True)
 
     # 2 · MODEL PERFORMANCE
     def _model_perf(self) -> None:
@@ -201,14 +201,14 @@ class AdminPanel:
             st.plotly_chart(
                 _line(DAYS, [820,790,840,810,830,800,850,820,800,790,810,830,800,815],
                       y_min=600, y_max=1000),
-                use_container_width=True,
+                width="stretch",
             )
         with col_acc:
             st.markdown("##### Scoring accuracy — user feedback (out of 5)")
             st.plotly_chart(
                 _line(DAYS, [3.8,3.9,4.0,4.0,4.1,4.0,4.2,4.1,4.1,4.2,4.1,4.2,4.1,4.1],
                       colour="#10B981", y_min=3, y_max=5),
-                use_container_width=True,
+                width="stretch",
             )
 
         cg, cs, cr = st.columns(3)
@@ -250,7 +250,7 @@ class AdminPanel:
         fig = _line(DAYS, compliance_trend, colour="#F59E0B", y_min=50, y_max=90)
         fig.add_hline(y=70, line_dash="dash", line_color="rgba(16,185,129,.4)",
                       annotation_text="Compliant threshold", annotation_font_size=8)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     # 3 · USERS
     def _users(self) -> None:
@@ -267,12 +267,12 @@ class AdminPanel:
             st.markdown("##### Quantity of logs per day (all users)")
             activity = [210,220,198,235,242,218,229,241,250,238,244,251,248,247]
             st.plotly_chart(_line(DAYS, activity, y_min=150, y_max=280),
-                            use_container_width=True)
+                            width="stretch")
         with col_grow:
             st.markdown("##### User growth — 4 weeks")
             st.plotly_chart(
                 _bar(["Wk1","Wk2","Wk3","Wk4"], [15,16,17,18], y_min=10, y_max=25),
-                use_container_width=True,
+                width="stretch",
             )
 
         st.markdown("##### User list — usage + accessibility")
@@ -339,7 +339,7 @@ class AdminPanel:
                 yaxis2=dict(overlaying="y",side="right",showgrid=False),
                 xaxis=dict(gridcolor="rgba(0,0,0,0)"),
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
         with col_costs:
             st.markdown("##### API cost breakdown — this month")
@@ -536,7 +536,7 @@ class AdminPanel:
                 x=DAYS,
                 y=[820,790,840,810,830,800,850,820,800,790,810,830,800,815],
                 name="Groq (ms)",
-                line=dict(color="#EB643E",width=2.5), marker=dict(size=4),
+                line=dict(color="#152EAE",width=2.5), marker=dict(size=4),
             ))
             fig.add_trace(go.Scatter(
                 x=DAYS,
@@ -546,13 +546,13 @@ class AdminPanel:
             ))
             fig.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="#FFFFFF",
-                font=dict(family="Sora,sans-serif",color="#64748B",size=9),
+                font=dict(family="Inter,sans-serif",color="#64748B",size=9),
                 legend=dict(bgcolor="rgba(255,255,255,.9)",font=dict(size=9,color="#212529")),
                 margin=dict(l=0,r=0,t=4,b=0), height=300,
-                yaxis=dict(gridcolor="rgba(0,0,0,0.05)"),
+                yaxis=dict(gridcolor="#F1F5F9"),
                 xaxis=dict(gridcolor="rgba(0,0,0,0)"),
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
         with col_q:
             st.markdown("##### Queue + pipeline")

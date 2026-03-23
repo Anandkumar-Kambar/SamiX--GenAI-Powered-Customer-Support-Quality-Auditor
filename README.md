@@ -2,102 +2,180 @@
 ## GenAI-Powered Customer Support Quality Auditor
 > *The All-Seeing Eye of Quality* · ಸಮೀಕ್ಷೆ
 
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Streamlit](https://img.shields.io/badge/Built_with-Streamlit-FF4B4B.svg)](https://streamlit.io)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 ---
 
-## Quick start (Windows 11 Pro — 5 steps)
+## 🚀 Quick Start (< 5 minutes)
 
-### 1  Prerequisites
-```
-Python 3.11+   →  https://www.python.org/downloads/
-Git            →  https://git-scm.com/download/win
-FFmpeg         →  https://ffmpeg.org/download.html  (needed by pydub)
-               →  Add to PATH: C:\ffmpeg\bin
+### Option 1: Automatic Setup (Easiest)
+```bash
+python quickstart.py  # Does everything for you!
 ```
 
-### 2  Clone & create virtual environment
+### Option 2: Manual Setup
+
+**Prerequisites:**
+- Python 3.11+ ([download](https://www.python.org/downloads/))
+- Git ([download](https://git-scm.com/download/win))
+- FFmpeg ([download](https://ffmpeg.org/download.html)) - Add to PATH!
+
+**Windows:**
 ```bat
-git clone https://github.com/YOUR_USERNAME/samix.git
-cd samix
 python -m venv venv
 venv\Scripts\activate
 pip install --upgrade pip
 pip install -r requirements.txt
-```
-
-### 3  Set your admin password
-```bat
 python generate_hash.py
-```
-Copy the hash printed to the terminal.
-
-### 4  Configure secrets
-Edit `.streamlit/secrets.toml` — paste your hash and API keys:
-```toml
-[auth]
-hashed_password = "$2b$12$YOUR_HASH_HERE"
-cookie_key      = "change_this_to_any_random_string"
-admin_name      = "Your Name"
-admin_email     = "you@company.com"
-
-[groq]
-api_key = "gsk_your_groq_key"          # https://console.groq.com
-
-[deepgram]
-api_key = "your_deepgram_key"          # https://console.deepgram.com
-
-[email]                                # optional — for real email alerts
-smtp_host       = "smtp.gmail.com"
-smtp_port       = 587
-sender_address  = "alerts@yourmail.com"
-sender_password = "your_app_password"
-```
-> ⚠ Never commit `secrets.toml` — it is in `.gitignore`.
-
-### 5  Run
-```bat
 streamlit run app.py
 ```
-Open `http://localhost:8501` in your browser.
-Login: username `admin` + the password you set in step 3.
+
+**Linux/macOS:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+python generate_hash.py
+streamlit run app.py
+```
+
+**Open:** http://localhost:8501
+
+**Default Login:** admin@samix.ai / admin
 
 ---
 
-## Free cloud hosting on Streamlit Community Cloud
+## 📋 Next Steps
 
-1. Push your repo to GitHub (see below — secrets are excluded by .gitignore)
-2. Go to https://share.streamlit.io → **New app**
-3. Select your repo + `app.py`
-4. Click **Advanced settings → Secrets** and paste the contents of your `secrets.toml`
-5. Click **Deploy** — live in ~2 minutes
+### 1. Get API Keys
+- **Groq API:** https://console.groq.com/keys
+- **Deepgram STT:** https://console.deepgram.com/console/keys (optional)
 
----
+### 2. Configure
+Edit `.env` with your API keys:
+```env
+GROQ_API_KEY=gsk_your_key_here
+DEEPGRAM_API_KEY=your_key_here
+```
 
-## Push to GitHub
+### 3. Validate Setup
+```bash
+python validate.py
+```
 
-```bat
-# First time
-git init                          # already done if you cloned
-git add .
-git commit -m "Initial SamiX commit"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/samix.git
-git push -u origin main
-
-# Subsequent updates
-git add .
-git commit -m "Your message"
-git push
+### 4. Run
+```bash
+streamlit run app.py
 ```
 
 ---
 
-## Project structure
+## ☁️ Deploy to Cloud (Free!)
+
+### Streamlit Cloud (Recommended)
+1. Push code to GitHub (secrets auto-excluded)
+2. Go to https://share.streamlit.io
+3. Click "New app" → Select your repo
+4. Add secrets via "Advanced settings"
+5. Live in ~2 minutes! 🎉
+
+### Docker
+```bash
+docker-compose up --build
+```
+
+### Heroku
+```bash
+git push heroku main
+```
+
+See `DEPLOYMENT.md` for all options (AWS, Google Cloud, etc.)
+
+---
+
+## 📁 Project Structure
 
 ```
 samix/
-├── app.py                        ← Streamlit entry point
-├── generate_hash.py              ← run once to hash your password
-├── requirements.txt
+├── app.py                      ← Entry point
+├── config.py                   ← Configuration management
+├── validate.py                 ← Pre-flight checks
+├── quickstart.py               ← Auto-setup script
+├── generate_hash.py            ← Password hashing
+│
+├── .env                        ← Environment variables (⚠ not in git)
+├── .streamlit/
+│   ├── config.toml            ← Streamlit settings
+│   └── secrets.toml           ← Secrets (⚠ not in git)
+├── .gitignore                 ← Excludes sensitive files
+│
+├── src/
+│   ├── auth/
+│   │   └── authenticator.py   ← Auth manager
+│   ├── pipeline/
+│   │   ├── groq_client.py     ← LLM inference
+│   │   ├── stt_processor.py   ← Speech-to-text
+│   │   └── alert_engine.py    ← Alerts system
+│   ├── ui/
+│   │   ├── login_page.py      ← Login UI
+│   │   ├── agent_panel.py     ← Agent dashboard
+│   │   ├── admin_panel.py     ← Admin dashboard
+│   │   ├── components.py      ← UI components
+│   │   └── styles.py          ← CSS/styling
+│   └── utils/
+│       ├── kb_manager.py      ← Knowledge base + RAG
+│       ├── history_manager.py ← Audit records
+│       ├── cost_tracker.py    ← API cost tracking
+│       ├── audio_processor.py ← Audio utilities
+│       └── report_generator.py ← Report generation
+│
+├── data/
+│   ├── auth/users.yaml        ← User database
+│   ├── kb/                    ← Knowledge base files
+│   ├── history/               ← Audit records (JSON)
+│   └── uploads/               ← Uploaded audio/transcripts
+│
+├── Dockerfile                 ← Docker config
+├── docker-compose.yml         ← Docker Compose
+├── requirements.txt           ← Python dependencies
+├── DEPLOYMENT.md              ← Deployment guide
+├── PRODUCTION_GUIDE.md        ← Production setup
+├── TROUBLESHOOTING.md         ← Troubleshooting
+└── QUICKSTART.md              ← Quick reference
+```
+
+---
+
+## 📚 Documentation
+
+| Document | Purpose |
+|----------|---------|
+| `QUICKSTART.md` | Quick reference & common tasks |
+| `DEPLOYMENT.md` | Deploy to Streamlit Cloud, Heroku, AWS, GCP |
+| `PRODUCTION_GUIDE.md` | Production setup & security |
+| `TROUBLESHOOTING.md` | Common issues & fixes |
+| `DEPLOYMENT_AWS.md` | Detailed AWS deployment (if available) |
+
+---
+
+## ✨ Features
+
+- **Multi-Engine AI Analysis**: Groq Llama-3 with dual-pass quality auditing
+- **Speech-to-Text Pipeline**: Deepgram (cloud) + Whisper (local fallback)
+- **Vector RAG**: Milvus Lite with HuggingFace embeddings
+- **Premium UI**: Dark theme with responsive design
+- **Secure Auth**: Bcrypt password hashing + session management
+- **Cost Tracking**: Real-time API usage & billing
+- **Scalable**: Docker, Heroku, Streamlit Cloud, AWS support
+
+---
+
+## 🔧 Configuration
+
+### Environment Variables (.env)
 ├── .gitignore
 ├── .streamlit/
 │   ├── config.toml               ← Deep Slate dark theme

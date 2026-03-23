@@ -1,0 +1,64 @@
+name: "Lint and Test"
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint flake8 black isort
+    
+    - name: Lint with pylint
+      run: |
+        pylint src/ --disable=all --enable=E,F || true
+    
+    - name: Format check with black
+      run: |
+        black --check src/ app.py config.py || true
+    
+    - name: Import sort check with isort
+      run: |
+        isort --check-only src/ app.py || true
+
+  test-imports:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+      
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Test imports
+      run: |
+        python -c "from config import Config; print('✓ config.py imports successfully')"
+        python -c "from src.auth.authenticator import AuthManager; print('✓ AuthManager imports successfully')"
+        python -c "from src.utils.kb_manager import KBManager; print('✓ KBManager imports successfully')"

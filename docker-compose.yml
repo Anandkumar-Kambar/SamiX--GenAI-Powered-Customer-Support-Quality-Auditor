@@ -1,0 +1,57 @@
+version: '3.9'
+
+services:
+  samix:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    container_name: samix-app
+    
+    ports:
+      - "8501:8501"
+    
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
+      - APP_ENV=production
+      - DEBUG=False
+    
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    
+    restart: unless-stopped
+    
+    networks:
+      - samix-network
+
+  milvus:
+    image: milvusdb/milvus:v2.3.0
+    
+    environment:
+      - COMMON_STORAGETYPE=local
+    
+    ports:
+      - "19530:19530"
+    
+    volumes:
+      - milvus-data:/var/lib/milvus
+    
+    restart: unless-stopped
+    
+    networks:
+      - samix-network
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  milvus-data:
+
+networks:
+  samix-network:
+    driver: bridge

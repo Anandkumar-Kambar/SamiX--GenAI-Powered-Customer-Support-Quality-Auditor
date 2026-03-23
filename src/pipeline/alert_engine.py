@@ -54,7 +54,7 @@ class AlertEngine:
         filename: str,
         agent_name: str,
         final_score: float,
-        violations: list[dict],
+        violations: int,
         auto_fail: bool,
         auto_fail_reason: str,
         recipient_email: str = "",
@@ -62,14 +62,19 @@ class AlertEngine:
         """
         Analyzes a completed audit and triggers notifications asynchronously.
         Returns a list of strings describing the alerts that were fired.
+        Input validation: violations can be int (count) or list (detailed violations).
         """
         triggered: list[str] = []
+        
+        # Input validation: Handle both int and list violations
+        violation_count = violations if isinstance(violations, int) else len(violations) if violations else 0
 
         # 1. Handle Auto-Failures (e.g., severe compliance breach).
         if auto_fail:
             msg = f"AUTO-FAIL — {filename} · {agent_name} · Reason: {auto_fail_reason}"
             self._toast(msg, icon="🚨")
-            await self._email(recipient_email, "SamiX AUTO-FAIL Alert", msg)
+            if recipient_email:
+                await self._email(recipient_email, "SamiX AUTO-FAIL Alert", msg)
             triggered.append(msg)
 
         # 2. Handle Low Quality Scores.
@@ -79,18 +84,19 @@ class AlertEngine:
                 f"Score: {final_score:.0f}/100 (threshold {self.SCORE_THRESHOLD:.0f})"
             )
             self._toast(msg, icon="⚠️")
-            await self._email(recipient_email, "SamiX Low Score Alert", msg)
+            if recipient_email:
+                await self._email(recipient_email, "SamiX Low Score Alert", msg)
             triggered.append(msg)
 
-        # 3. Handle Critical Violations (e.g., policy mismatch).
-        crits = [v for v in violations if v.get("severity", "") == "Critical"]
-        if crits:
+        # 3. Handle Critical Violations (violation count trigger).
+        if violation_count > 2:  # More than 2 violations is critical
             msg = (
                 f"CRITICAL VIOLATIONS — {filename} · {agent_name} · "
-                f"{len(crits)} critical: {', '.join(v['type'] for v in crits)}"
+                f"{violation_count} violations detected"
             )
             self._toast(msg, icon="🔴")
-            await self._email(recipient_email, "SamiX Critical Violation", msg)
+            if recipient_email:
+                await self._email(recipient_email, "SamiX Critical Violation", msg)
             triggered.append(msg)
 
         return triggered

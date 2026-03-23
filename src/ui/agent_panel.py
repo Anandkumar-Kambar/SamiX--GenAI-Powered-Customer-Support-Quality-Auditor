@@ -96,7 +96,7 @@ class AgentPanel:
                 help="Filename is stored exactly as uploaded — no renaming.",
                 label_visibility="visible",
             )
-            if uploaded:
+            if uploaded and len(uploaded.getvalue()) > 0:
                 st.markdown(
                     f'<div class="mono-badge">📄 {uploaded.name} · '
                     f'{len(uploaded.getvalue())/1024:.1f} KB</div>',
@@ -109,7 +109,7 @@ class AgentPanel:
                 mode = st.radio("Audit Mode", ["📂 File Upload", "🎤 Live Call"], horizontal=True)
 
                 if mode == "📂 File Upload":
-                    if st.button("🔍  Analyse with SamiX", use_container_width=True, type="primary"):
+                    if st.button("🔍  Analyse with SamiX", width="stretch", type="primary"):
                         asyncio.run(self._run_audit(uploaded.name, uploaded.getvalue()))
                 else:
                     self._live_call_workspace()
@@ -202,7 +202,7 @@ class AgentPanel:
         )
 
         sel = st.dataframe(
-            df[vis], use_container_width=True, hide_index=True,
+            df[vis], width="stretch", hide_index=True,
             on_select="rerun", selection_mode="single-row",
         )
         if sel and sel.selection and sel.selection.rows:
@@ -238,21 +238,21 @@ class AgentPanel:
         )
         # Header bar
         st.markdown(
-            f'<div style="background:rgba(235,100,62,0.04);border:1px solid rgba(235,100,62,0.15);'
-            f'border-radius:12px;padding:16px 20px;margin-bottom:1.2rem;box-shadow:var(--shadow);">'
-            f'<div style="font-family:Sora,sans-serif;font-weight:600;font-size:.72rem;color:#64748B;margin-bottom:8px;letter-spacing:0.05em;">'
-            f'SESSION · {session.upload_time}</div>'
-            f'<div style="font-size:1.15rem;font-weight:700;color:#212529;margin-bottom:8px;">'
+            f'<div style="background:#FFFFFF;border:1px solid #E2E8F0;'
+            f'border-radius:14px;padding:22px 28px;margin-bottom:1.5rem;box-shadow:var(--shadow-sm);">'
+            f'<div style="font-family:Inter,sans-serif;font-weight:700;font-size:0.75rem;color:#152EAE;margin-bottom:8px;letter-spacing:0.05em;text-transform:uppercase;">'
+            f'Analysis Session · {session.upload_time}</div>'
+            f'<div style="font-size:1.6rem;font-weight:800;color:#0F172A;margin-bottom:12px;letter-spacing:-0.5px;">'
             f'{session.filename}</div>'
-            f'<div style="display:flex;gap:22px;flex-wrap:wrap;'
-            f'font-family:Sora,sans-serif;font-size:.82rem;color:#64748B;font-weight:500;">'
-            f'<span>Agent: <span style="color:{verdict_colour};font-weight:700;">'
+            f'<div style="display:flex;gap:28px;flex-wrap:wrap;'
+            f'font-family:Inter,sans-serif;font-size:.85rem;color:#475569;font-weight:600;">'
+            f'<span>Performance: <span style="color:#152EAE;font-weight:800;">'
             f'{s.final_score:.0f}/100</span></span>'
-            f'<span>Sentiment: <span style="color:#10B981;font-weight:700;">'
+            f'<span>Sensitivity: <span style="color:#10B981;font-weight:800;">'
             f'{s.customer_overall:.1f}/10</span></span>'
-            f'<span>Violations: <span style="color:#EF4444;font-weight:700;">{session.violations}</span></span>'
-            f'<span>Turns: {len(session.transcript)}</span>'
-            f'<span>Duration: {self._audio.duration_label(session.duration_sec)}</span>'
+            f'<span>Violations: <span style="color:#EF4444;font-weight:800;">{session.violations}</span></span>'
+            f'<span>Turns: <span style="color:#0F172A;">{len(session.transcript)}</span></span>'
+            f'<span>Duration: <span style="color:#0F172A;">{self._audio.duration_label(session.duration_sec)}</span></span>'
             f'</div></div>',
             unsafe_allow_html=True,
         )
@@ -271,22 +271,22 @@ class AgentPanel:
             display_text = session.summary_customer_query if session.summary_customer_query else (session.summary or "Run an audit to generate the summary.")
             
             if session.summary_customer_query:
-                subs = "".join([f"<li style='margin-bottom:2px;'>{sq}</li>" for sq in session.summary_sub_queries])
+                subs = "".join([f"<li style='margin-bottom:4px;'>{sq}</li>" for sq in session.summary_sub_queries])
                 html_summary = f'''
-                <div class="glass-card" style="font-size:.88rem;color:#64748B;line-height:1.7;">
-                    <strong style="color:#212529;">Primary Query:</strong> {session.summary_customer_query}<br>
-                    <strong style="color:#212529;">Expectation:</strong> {session.summary_customer_expectation}<br>
-                    <strong style="color:#212529;">Sub-Queries:</strong>
-                    <ul style="margin:4px 0 0 20px;padding:0;color:#64748B;font-size:0.85rem;">{subs}</ul>
+                <div class="glass-card" style="font-size:.9rem;color:#475569;line-height:1.7;">
+                    <div style="margin-bottom:12px;"><strong style="color:#0F172A;font-weight:700;">Primary Query:</strong> {session.summary_customer_query}</div>
+                    <div style="margin-bottom:12px;"><strong style="color:#0F172A;font-weight:700;">Expectation:</strong> {session.summary_customer_expectation}</div>
+                    <div style="margin-bottom:4px;"><strong style="color:#0F172A;font-weight:700;">Key Topics:</strong></div>
+                    <ul style="margin:4px 0 0 20px;padding:0;color:#64748B;">{subs}</ul>
                 </div>
                 '''
             else:
-                html_summary = f'<div class="glass-card" style="font-size:.88rem;color:#64748B;line-height:1.7;">{display_text}</div>'
+                html_summary = f'<div class="glass-card" style="font-size:.9rem;color:#475569;line-height:1.7;">{display_text}</div>'
                 
             st.markdown(html_summary, unsafe_allow_html=True)
 
         with col_b:
-            if st.button("▶ Smart Summary", use_container_width=True, key="smart_sum"):
+            if st.button("▶ Smart Summary", width="stretch", key="smart_sum"):
                 with st.spinner("Generating audio via pydub…"):
                     aud_text = session.summary_customer_query if session.summary_customer_query else (session.summary or "")
                     text = self._audio.generate_text_summary(
@@ -514,7 +514,7 @@ class AgentPanel:
             "⬇ PDF", data=pdf_bytes,
             file_name=f"{base}_audit.pdf",
             mime="application/pdf",
-            use_container_width=True,
+            width="stretch",
         )
 
         # Excel
@@ -523,7 +523,7 @@ class AgentPanel:
             "⬇ Excel", data=xlsx_bytes,
             file_name=f"{base}_audit.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            use_container_width=True,
+            width="stretch",
         )
 
         # JSON
@@ -533,7 +533,7 @@ class AgentPanel:
             data=json.dumps(dataclasses.asdict(session), indent=2, default=str).encode(),
             file_name=f"{base}_audit.json",
             mime="application/json",
-            use_container_width=True,
+            width="stretch",
         )
 
         # TXT
@@ -542,7 +542,7 @@ class AgentPanel:
             data=self._build_txt(session).encode(),
             file_name=f"{base}_audit.txt",
             mime="text/plain",
-            use_container_width=True,
+            width="stretch",
         )
 
         # CSV scores
@@ -597,25 +597,25 @@ class AgentPanel:
         fig = go.Figure()
         fig.add_trace(go.Scatter(
             x=times, y=values, mode="lines+markers",
-            line=dict(color="#EB643E", width=3),
+            line=dict(color="#152EAE", width=3),
             marker=dict(size=8, color=[
                 "#EF4444" if v < 60 else "#F59E0B" if v < 75 else "#10B981"
                 for v in values
             ]),
-            fill="tozeroy", fillcolor="rgba(235,100,62,0.05)",
+            fill="tozeroy", fillcolor="rgba(21, 46, 174, 0.04)",
         ))
         fig.add_hline(y=60, line_dash="dash",
-                      line_color="rgba(239,68,68,.4)",
+                      line_color="rgba(239,68,68,.3)",
                       annotation_text="Fail threshold")
         fig.update_layout(
             paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="#FFFFFF",
-            font=dict(family="Sora, sans-serif", color="#64748B", size=10),
+            font=dict(family="Inter, sans-serif", color="#64748B", size=10),
             margin=dict(l=0, r=0, t=10, b=0), height=210,
-            yaxis=dict(range=[0,105], gridcolor="rgba(0,0,0,0.05)"),
+            yaxis=dict(range=[0,105], gridcolor="#F1F5F9"),
             xaxis=dict(gridcolor="rgba(0,0,0,0)"),
             showlegend=False,
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     # Helpers 
     def _pipeline_strip(self) -> None:
@@ -678,17 +678,26 @@ class AgentPanel:
                             if suggs:
                                 st.session_state.live_suggestions = suggs
 
-            if st.button("🛑 End Call & Audit", use_container_width=True, type="primary"):
-                if st.session_state.live_transcript:
-                    # Finalize the session
-                    final_text = transcript_to_text(st.session_state.live_transcript)
-                    filename = f"live_call_{int(time.time())}.wav"
-                    # For live call, we treat the transcript as the source
-                    asyncio.run(self._run_audit(filename, b"", transcript_override=st.session_state.live_transcript))
-                    # Reset state
-                    st.session_state.live_transcript = []
-                    st.session_state.live_suggestions = []
-                    st.rerun()
+            if st.button("🛑 End Call & Audit", width="stretch", type="primary"):
+                if st.session_state.live_transcript and len(st.session_state.live_transcript) > 0:
+                    # Validate transcript turns have required fields
+                    try:
+                        for turn in st.session_state.live_transcript:
+                            if not hasattr(turn, 'speaker') or not hasattr(turn, 'text'):
+                                st.error("Invalid transcript structure. Please try again.")
+                                return
+                        # Finalize the session
+                        filename = f"live_call_{int(time.time())}.wav"
+                        # For live call, we treat the transcript as the source
+                        asyncio.run(self._run_audit(filename, b"", transcript_override=st.session_state.live_transcript))
+                        # Reset state
+                        st.session_state.live_transcript = []
+                        st.session_state.live_suggestions = []
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error finalizing live call: {e}")
+                else:
+                    st.warning("No transcript recorded. Please record some audio first.")
 
         with c2:
             st.markdown("###### Active Suggestions")
@@ -727,8 +736,12 @@ class AgentPanel:
                 st.write("🎙 Transcribing with speaker separation…")
                 turns = await self._stt.process(file_bytes, filename)
             else:
-                turns = transcript_override
-                duration = len(turns) * 5 # Heuristic for live call
+                turns = transcript_override if transcript_override else []
+                # Calculate duration more accurately for live calls
+                duration = sum(
+                    len(t.text.split()) / 160 if hasattr(t, 'text') else 0 
+                    for t in turns
+                ) if turns else 0  # ~160 words per minute is typical speech rate
 
             tx_text = transcript_to_text(turns)
 
@@ -751,11 +764,17 @@ class AgentPanel:
                  rag_tasks.append(self._kb.audit_chain(wt.agent_said, wt.what_went_wrong))
             
             if rag_tasks:
-                rag_results = await asyncio.gather(*rag_tasks)
-                for wt, audit in zip(scoring.wrong_turns, rag_results):
-                    if audit.get("top_source"):
-                        wt.rag_source    = audit["top_source"]
-                        wt.rag_confidence = audit.get("top_score", wt.rag_confidence)
+                try:
+                    rag_results = await asyncio.gather(*rag_tasks, return_exceptions=True)
+                    for wt, audit in zip(scoring.wrong_turns, rag_results):
+                        if isinstance(audit, Exception):
+                            st.warning(f"RAG query failed: {audit}")
+                            continue
+                        if audit and isinstance(audit, dict) and audit.get("top_source"):
+                            wt.rag_source    = audit["top_source"]
+                            wt.rag_confidence = float(audit.get("top_score", wt.rag_confidence))
+                except Exception as e:
+                    st.warning(f"RAG verification error: {e}")
 
             st.write("💾 Storing session (filename preserved)…")
             session = AuditSession.new(filename, mode="upload", agent_name="Alex K.")
@@ -785,13 +804,14 @@ class AgentPanel:
             st.session_state["active_session_id"] = session.session_id
 
             st.write("🔔 Checking alert thresholds…")
-            self._alerts.check_and_fire(
+            await self._alerts.check_and_fire(
                 filename=filename,
                 agent_name=session.agent_name,
                 final_score=scoring.scores.final_score,
                 violations=scoring.violations,
                 auto_fail=scoring.auto_fail,
                 auto_fail_reason=scoring.auto_fail_reason,
+                recipient_email="supervisor@company.com",
             )
 
             status.update(

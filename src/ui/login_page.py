@@ -10,6 +10,8 @@ It features:
 from __future__ import annotations
 
 import streamlit as st
+from pathlib import Path
+from PIL import Image
 
 from src.auth.authenticator import AuthManager
 
@@ -48,89 +50,200 @@ class LoginPage:
         Displays the SamiX logo, tagline, and real-time operational metrics
         to build user confidence before sign-in.
         """
-        st.markdown("<br><br>", unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
 
-        # Logo Placeholder 
-        # Designed as a distinct glassmorphic tile.
+        # Try to load custom logo from assets/images
+        logo_path = Path("assets/images/logo.png")
+        if logo_path.exists():
+            try:
+                logo = Image.open(logo_path)
+                st.image(logo, width=120)
+                st.markdown("<br>", unsafe_allow_html=True)
+            except Exception as e:
+                print(f"Could not load logo: {e}")
+                self._render_default_logo()
+        else:
+            self._render_default_logo()
+
+        # Professional Title
         st.markdown(
             '<div style="'
-            'width:120px;height:120px;'
-            'border:2px dashed rgba(235,100,62,0.3);'
-            'border-radius:20px;'
-            'display:flex;align-items:center;justify-content:center;'
-            'background:rgba(235,100,62,0.04);'
-            'margin-bottom:2.5rem;'
-            '">'
-            '<span style="font-size:0.75rem;font-family:Sora,sans-serif;font-weight:600;'
-            'color:rgba(235,100,62,0.6);letter-spacing:0.12em;">SAMIX</span>'
+            'font-family:\'Inter\',sans-serif;'
+            'font-size:2.5rem;'
+            'font-weight:800;'
+            'color:#0F172A;'
+            'letter-spacing:-1px;'
+            'line-height:1.1;'
+            'margin-bottom:1rem;">'
+            'Transform Your <span style="color:#152EAE;">Support Quality</span>'
             '</div>',
             unsafe_allow_html=True,
         )
 
-        # Title & Tagline 
+        # Subtitle
         st.markdown(
-            '<div style="font-family:Bebas Neue,sans-serif;font-size:3.5rem;'
-            'color:#212529;line-height:0.9;letter-spacing:0.02em;margin-bottom:0.5rem;">'
-            'SAMI<span style="color:#EB643E;">X</span>'
-            '</div>',
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            '<div style="font-family:Sora,sans-serif;font-size:0.85rem;font-weight:600;'
-            'color:#EB643E;letter-spacing:0.15em;margin-bottom:1.5rem;">'
-            'AI QUALITY INTELLIGENCE'
-            '</div>',
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            '<div style="font-family:Sora,sans-serif;font-size:0.75rem;'
-            'color:#64748B;line-height:2.2;font-weight:500;">'
-            'samiksha · ಸಮೀಕ್ಷೆ<br>'
-            'GenAI-Powered Customer Support Auditor<br><br>'
-            '<span style="color:#EB643E;font-weight:600;">Groq</span> &nbsp;·&nbsp; <span style="color:#749CE2;font-weight:600;">Deepgram</span> &nbsp;·&nbsp; Whisper<br>'
-            'Milvus Lite &nbsp;·&nbsp; pydub &nbsp;·&nbsp; LangChain'
+            '<div style="'
+            'font-family:\'Inter\',sans-serif;'
+            'font-size:1.1rem;'
+            'color:#475569;'
+            'line-height:1.6;'
+            'margin-bottom:2.5rem;">'
+            'SamiX AI provides real-time customer support quality assessment, compliance auditing, and intelligent business insights.<br><br>'
+            '<span style="font-size:0.875rem;color:#94A3B8;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;">'
+            'Powered by: Groq · Deepgram · Milvus · LangChain'
+            '</span>'
             '</div>',
             unsafe_allow_html=True,
         )
 
         # Live Operational Metrics 
         # Provide social proof and platform context.
-        st.markdown("<br>", unsafe_allow_html=True)
-        c1, c2 = st.columns(2)
-        c1.metric("Audits today",    "247")
-        c2.metric("Avg QA score",    "73.4")
-        c1.metric("Active agents",   "18")
-        c2.metric("Violations",      "38")
+        st.markdown(
+            '<div style="'
+            'display:grid;grid-template-columns:1fr 1fr;gap:1rem;'
+            'margin-bottom:2rem;">'
+        , unsafe_allow_html=True)
+        
+        c1, c2 = st.columns(2, gap="small")
+        with c1:
+            st.markdown(
+                f'<div style="'
+                f'background:#FFFFFF;'
+                f'border:1px solid #E2E8F0;'
+                f'border-radius:14px;'
+                f'padding:1.5rem;'
+                f'text-align:center;box-shadow:var(--shadow-sm);">'
+                f'<div style="font-size:2.2rem;font-weight:800;color:#152EAE;font-family:\'Inter\',sans-serif;letter-spacing:-1px;">247</div>'
+                f'<div style="font-size:0.75rem;color:#64748B;margin-top:0.5rem;font-family:\'Inter\',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Audits Today</div>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
+        
+        with c2:
+            st.markdown(
+                f'<div style="'
+                f'background:#FFFFFF;'
+                f'border:1px solid #E2E8F0;'
+                f'border-radius:14px;'
+                f'padding:1.5rem;'
+                f'text-align:center;box-shadow:var(--shadow-sm);">'
+                f'<div style="font-size:2.2rem;font-weight:800;color:#10B981;font-family:\'Inter\',sans-serif;letter-spacing:-1px;">73.4%</div>'
+                f'<div style="font-size:0.75rem;color:#64748B;margin-top:0.5rem;font-family:\'Inter\',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Avg QA Score</div>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
+        
+        c1, c2 = st.columns(2, gap="small")
+        with c1:
+            st.markdown(
+                '<div style="'
+                'background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(245,158,11,0.04));'
+                'border:1px solid rgba(245,158,11,0.2);'
+                'border-radius:12px;'
+                'padding:1rem;'
+                'text-align:center;">'
+                '<div style="font-size:2rem;font-weight:700;color:#F59E0B;font-family:\'JetBrains Mono\',monospace;">18</div>'
+                '<div style="font-size:0.75rem;color:#6B7280;margin-top:0.5rem;font-family:\'Inter\',sans-serif;font-weight:600;">Active Agents</div>'
+                '</div>',
+                unsafe_allow_html=True
+            )
+        
+        with c2:
+            st.markdown(
+                '<div style="'
+                'background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(239,68,68,0.04));'
+                'border:1px solid rgba(239,68,68,0.2);'
+                'border-radius:12px;'
+                'padding:1rem;'
+                'text-align:center;">'
+                '<div style="font-size:2rem;font-weight:700;color:#EF4444;font-family:\'JetBrains Mono\',monospace;">38</div>'
+                '<div style="font-size:0.75rem;color:#6B7280;margin-top:0.5rem;font-family:\'Inter\',sans-serif;font-weight:600;">Flagged Issues</div>'
+                '</div>',
+                unsafe_allow_html=True
+            )
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    def _render_default_logo(self) -> None:
+        """Fallback logo: Modern gradient badge when no custom logo found."""
+        st.markdown(
+            '<div style="'
+            'display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;">'
+            '<div style="'
+            'width:52px;height:52px;'
+            'background:linear-gradient(135deg,#152EAE,#2563EB);'
+            'border-radius:14px;'
+            'display:flex;align-items:center;justify-content:center;'
+            'box-shadow:0 8px 16px rgba(21, 46, 174, 0.2);'
+            '">'
+            '<span style="font-size:1.6rem;color:#fff;font-weight:800;">S</span>'
+            '</div>'
+            '<div style="font-family:\'Inter\',sans-serif;">'
+            '<div style="font-size:1.5rem;font-weight:800;color:#0F172A;margin:0;letter-spacing:-0.5px;">Shopeers <span style="color:#2563EB;">AI</span></div>'
+            '<div style="font-size:0.65rem;color:#64748B;font-weight:700;letter-spacing:0.1em;margin:0;text-transform:uppercase;">Analytics Platform</div>'
+            '</div>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
 
     def _render_form(self) -> None:
         """
         Interactive Authentication Section.
         Toggles between Sign In and Registration workflows.
         """
-        st.markdown("<br><br>", unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Welcome Header
         st.markdown(
-            '<div style="font-family:Bebas Neue;font-size:2.2rem;'
-            'color:#212529;letter-spacing:0.04em;margin-bottom:0.25rem;">'
-            'Welcome</div>',
+            '<div style="'
+            'font-family:\'Inter\',sans-serif;'
+            'font-size:2rem;'
+            'font-weight:800;'
+            'color:#0F172A;'
+            'letter-spacing:-0.5px;'
+            'margin-bottom:0.5rem;">'
+            'Welcome'
+            '</div>',
             unsafe_allow_html=True,
         )
         st.markdown(
-            '<div style="font-family:Sora,sans-serif;font-size:0.75rem;font-weight:600;'
-            'color:#94A3B8;letter-spacing:0.1em;margin-bottom:1.5rem;">'
-            'QUALITY AUDIT PLATFORM ACCESS'
+            '<div style="'
+            'font-family:\'Inter\',sans-serif;'
+            'font-size:0.95rem;'
+            'color:#64748B;'
+            'margin-bottom:2.5rem;'
+            'font-weight:500;">'
+            'Sign in to access your analytics dashboard'
             '</div>',
             unsafe_allow_html=True,
         )
 
+        # Tab styling with modern appearance
         tab_login, tab_register = st.tabs(["Sign In", "Register"])
 
         with tab_login:
             # Wrap in form to allow 'Enter' key submission.
             with st.form("login_form", clear_on_submit=False):
-                email = st.text_input("Email Address", placeholder="name@company.com")
-                password = st.text_input("Password", type="password", placeholder="••••••••")
+                email = st.text_input(
+                    "Email Address",
+                    placeholder="name@company.com",
+                    label_visibility="collapsed",
+                    key="login_email"
+                )
+                password = st.text_input(
+                    "Password",
+                    type="password",
+                    placeholder="••••••••",
+                    label_visibility="collapsed",
+                    key="login_password"
+                )
                 
-                submit = st.form_submit_button("Sign In →", use_container_width=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                submit = st.form_submit_button(
+                    "🔓 Sign In",
+                    width="stretch",
+                    help="Sign in with your email and password"
+                )
 
                 if submit:
                     if not email or not password:
@@ -143,17 +256,47 @@ class LoginPage:
                             st.error("Incorrect email or password.", icon="🔒")
 
             if self._auth.is_pending():
-                st.info("Enter your credentials to securely access the quality audit platform.", icon="ℹ️")
+                st.info(
+                    "💡 Enter your credentials to access the platform.",
+                    icon="ℹ️"
+                )
 
         with tab_register:
             # Registration requires confirmation and field validation.
             with st.form("register_form", clear_on_submit=True):
-                name = st.text_input("Full Name", placeholder="Jane Doe")
-                email = st.text_input("Email Address", placeholder="name@company.com")
-                password = st.text_input("Password", type="password", placeholder="••••••••")
-                confirm_pwd = st.text_input("Confirm Password", type="password", placeholder="••••••••")
+                name = st.text_input(
+                    "Full Name",
+                    placeholder="Jane Doe",
+                    label_visibility="collapsed",
+                    key="register_name"
+                )
+                email = st.text_input(
+                    "Email Address",
+                    placeholder="name@company.com",
+                    label_visibility="collapsed",
+                    key="register_email"
+                )
+                password = st.text_input(
+                    "Password",
+                    type="password",
+                    placeholder="••••••••",
+                    label_visibility="collapsed",
+                    key="register_password"
+                )
+                confirm_pwd = st.text_input(
+                    "Confirm Password",
+                    type="password",
+                    placeholder="••••••••",
+                    label_visibility="collapsed",
+                    key="register_confirm"
+                )
                 
-                submit = st.form_submit_button("Register Account →", use_container_width=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                submit = st.form_submit_button(
+                    "✨ Create Account",
+                    use_container_width=True,
+                    help="Create a new account"
+                )
 
                 if submit:
                     if not name or not email or not password:
@@ -163,6 +306,9 @@ class LoginPage:
                     else:
                         success = self._auth.register(email, name, password)
                         if success:
-                            st.success(f"Account created for {email}! Please sign in from the 'Sign In' tab.", icon="✅")
+                            st.success(
+                                f"✅ Account created! Please sign in with your credentials.",
+                                icon=None
+                            )
                         else:
                             st.error("An account with this email already exists.", icon="⚠")

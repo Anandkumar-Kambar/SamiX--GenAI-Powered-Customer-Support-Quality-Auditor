@@ -22,15 +22,15 @@ if TYPE_CHECKING:
 
 
 # Visual Identity Constants 
-# These RGB values match the 'Electric Violet' UI theme.
+# These RGB values match the 'Professional Blue' UI theme.
 
-_INK   = (33,  42,  49)
-_VIOLA = (139, 92,  246)
-_GREEN = (16,  185, 129)
-_RED   = (239, 68,  68)
-_AMBER = (245, 158, 11)
-_LIGHT = (226, 232, 240)
-_SLATE = (100, 116, 135)
+_INK   = (17,   24,  39)   # Near black for text
+_BLUE  = (59,   130, 246)  # Professional blue (3B82F6)
+_GREEN = (16,   185, 129)  # Success green
+_RED   = (239,  68,  68)   # Critical red
+_AMBER = (245,  158, 11)   # Warning amber
+_LIGHT = (226,  232, 240)  # Light background
+_SLATE = (107,  114, 128)  # Muted text
 
 
 class ReportGenerator:
@@ -85,7 +85,7 @@ class ReportGenerator:
 
         # Style Definitions
         h1 = ParagraphStyle("h1", parent=styles["Normal"],
-                             fontSize=20, textColor=c(_VIOLA),
+                             fontSize=20, textColor=c(_BLUE),
                              fontName="Helvetica-Bold", spaceAfter=4)
         h2 = ParagraphStyle("h2", parent=styles["Normal"],
                              fontSize=13, textColor=c(_INK),
@@ -108,7 +108,7 @@ class ReportGenerator:
         # Branding & Header 
         story.append(Paragraph("SamiX · samiksha", h1))
         story.append(Paragraph("Quality Audit Report", h1))
-        story.append(HRFlowable(width="100%", color=c(_VIOLA), thickness=1))
+        story.append(HRFlowable(width="100%", color=c(_BLUE), thickness=1))
         story.append(Spacer(1, 4*mm))
 
         # Session Metadata Table
@@ -137,7 +137,7 @@ class ReportGenerator:
         # Executive Verdict Banner 
         verdict_colour = (
             c(_GREEN) if s.final_score >= 80
-            else c(_VIOLA) if s.final_score >= 70
+            else c(_BLUE) if s.final_score >= 70
             else c(_AMBER) if s.final_score >= 60
             else c(_RED)
         )
@@ -160,7 +160,7 @@ class ReportGenerator:
         )
         banner.setStyle(TableStyle([
             ("BACKGROUND", (0,0), (-1,-1), colors.Color(.97,.96,.99)),
-            ("BOX",        (0,0), (-1,-1), 1, c(_VIOLA)),
+            ("BOX",        (0,0), (-1,-1), 1, c(_BLUE)),
             ("VALIGN",     (0,0), (-1,-1), "MIDDLE"),
             ("LEFTPADDING",(0,0), (-1,-1), 8),
             ("RIGHTPADDING",(0,0),(-1,-1), 8),
@@ -188,7 +188,7 @@ class ReportGenerator:
 
         dt = Table(dim_data, colWidths=[60*mm, 30*mm, 25*mm, 55*mm])
         dt.setStyle(TableStyle([
-            ("BACKGROUND",  (0,0), (-1,0), c(_VIOLA)),
+            ("BACKGROUND",  (0,0), (-1,0), c(_BLUE)),
             ("TEXTCOLOR",   (0,0), (-1,0), colors.white),
             ("FONTNAME",    (0,0), (-1,0), "Helvetica-Bold"),
             ("FONTSIZE",    (0,0), (-1,-1), 9),

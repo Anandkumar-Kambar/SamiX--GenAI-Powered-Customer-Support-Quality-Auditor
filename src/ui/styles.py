@@ -1,191 +1,268 @@
 """
-SamiX Global Style Engine
+SamiX Enterprise Design System
 
-This module defines the visual identity of the SamiX platform. 
-It uses a 'Deep Slate' and 'Electric Violet' color palette with 
-glassmorphism effects and precise typography.
-
-The styles are injected directly into the Streamlit DOM to override 
-default behaviors and create a premium, enterprise-grade aesthetic.
+Professional dark theme design system inspired by modern SaaS leaders (AirCover, Linear, Stripe).
+Features dark mode with enterprise-grade aesthetics, glassmorphism, and sophisticated interactions.
 """
 
-# Global CSS Definition 
-# This multi-line string contains the entire design system, including 
-# variables, core layout overrides, and specialized component classes.
 CSS = """
 <style>
-/* Design System Tokens */
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&family=Sora:wght@300;400;500;600&family=Bebas+Neue&display=swap');
+/* Modern Font Stack - Inter for that premium B2B feel */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  /* Color Palette - SarvInfo Inspired */
-  --bg-base:    #FDFCF7;        /* Clean Off-white */
-  --bg-surface: #FFFFFF;        /* Pure White */
-  --bg-overlay: rgba(255,255,255,0.85);
-  --accent:     #EB643E;        /* Vibrant Sarv Orange */
-  --accent-dim: rgba(235,100,62,0.08);
-  --accent-glow:rgba(235,100,62,0.25);
-  --secondary:  #749CE2;        /* Soft Blue Accent */
+  /* Shopeers Premium Palette - Modern B2B */
+  --bg-base:     #F8FAFC;       /* Very light slate background */
+  --bg-surface:  #FFFFFF;       /* Clean white surface */
+  --bg-hover:    #F1F5F9;       /* Light slate on hover */
+  --bg-overlay:  rgba(255,255,255,0.95);
+  --bg-elevated: #FFFFFF;       /* Elevated cards */
   
-  /* Semantic Colors */
-  --text-primary:   #212529;    /* Deep Charcoal */
-  --text-secondary: #64748B;    /* Muted Slate */
-  --text-muted:     #94A3B8;
-  --danger:     #EF4444;
-  --warn:       #F59E0B;
-  --ok:         #10B981;
-  --border:     rgba(0,0,0,0.06);
-  --border-m:   rgba(235,100,62,0.2);
-
-  /* Geometry & FX */
-  --radius:     16px;           /* Softer, more modern corners */
-  --radius-sm:  10px;
-  --blur:       12px;
-  --shadow:     0 4px 12px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.02);
+  /* Primary Brand - Shopeers Blue */
+  --accent:      #152EAE;       /* Deep Professional Shopeers Blue */
+  --accent-dark: #0D1C6A;       /* Darker tone for depth */
+  --accent-light: #2563EB;      /* Vibrant blue for highlights */
+  --accent-glow: rgba(21, 46, 174, 0.15);
+  --accent-subtle: rgba(21, 46, 174, 0.05);
+  
+  /* Gradients */
+  --grad-primary: linear-gradient(135deg, #152EAE 0%, #2563EB 100%);
+  --grad-surface: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+  
+  /* Supporting Colors */
+  --success:     #10B981;       /* Emerald Green */
+  --success-bg:  #F0FDF4;
+  --warning:     #F59E0B;       /* Amber */
+  --warning-bg:  #FFFBEB;
+  --danger:      #EF4444;       /* Red */
+  --danger-bg:   #FEF2F2;
+  --info:        #3B82F6;       /* Blue */
+  
+  /* Text Colors - High Contrast for Light Mode */
+  --text-primary:    #0F172A;   /* Deep slate/black */
+  --text-secondary:  #475569;   /* Slate gray */
+  --text-tertiary:   #64748B;   /* Medium slate */
+  --text-muted:      #94A3B8;   /* Light slate */
+  
+  /* Borders & Dividers */
+  --border:          #E2E8F0;
+  --border-accent:   #152EAE;
+  --divider:         #F1F5F9;
+  
+  /* Effects */
+  --radius:          14px;      /* Softer rounded corners */
+  --radius-lg:       18px;
+  --radius-sm:       10px;
+  --blur:            12px;
+  --shadow-sm:       0 1px 3px rgba(0,0,0,0.05);
+  --shadow:          0 4px 12px rgba(0,0,0,0.03);
+  --shadow-md:       0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05);
+  --shadow-lg:       0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
   
   /* Typography */
-  --font-mono:  'IBM Plex Mono', monospace;
-  --font-sans:  'Sora', 'IBM Plex Sans', sans-serif;
-  --font-display: 'Bebas Neue', sans-serif;
+  --font-sans:       'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:       'JetBrains Mono', 'Courier New', monospace;
 }
 
-/* App-Wide Reset */
-.stApp, html, body, [class*="css"] {
-  background-color: var(--bg-base) !important;
+/* App-Wide Styling */
+.stApp, html, body {
+  background: var(--bg-base) !important;
   color: var(--text-primary) !important;
   font-family: var(--font-sans) !important;
-}
-.stApp {
-  background: var(--bg-base) !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
 }
 
-/* Sidebar & Navigation */
+/* Sidebar Styling - Shopeers Dark Sidebar */
 section[data-testid="stSidebar"] {
-  background: var(--bg-surface) !important;
-  border-right: 1px solid var(--border) !important;
-  box-shadow: 2px 0 10px rgba(0,0,0,0.02) !important;
+  background: #0F172A !important; /* Deep navy sidebar */
+  border-right: 1px solid rgba(255,255,255,0.05) !important;
 }
-section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
-  font-size: 0.9rem !important;
-  color: var(--text-secondary) !important;
+section[data-testid="stSidebar"] * {
+  color: rgba(255,255,255,0.7) !important;
+}
+section[data-testid="stSidebar"] .stMarkdownContainer p {
+  color: rgba(255,255,255,0.9) !important;
 }
 
-/* Metrics & KPI Visualization */
+/* Sidebar Active State */
+section[data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div:hover {
+  background: rgba(255,255,255,0.05) !important;
+  border-radius: var(--radius-sm);
+}
+
+/* Main content area */
+.stMainBlockContainer {
+  padding-top: 2rem !important;
+  max-width: 1200px !important;
+}
+
+/* Modern Tabs */
+.stTabs [data-baseweb="tab-list"] {
+  gap: 8px !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 0 0 12px 0 !important;
+  background: transparent !important;
+}
+.stTabs [data-baseweb="tab"] {
+  background: transparent !important;
+  color: var(--text-tertiary) !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  padding: 10px 20px !important;
+  border-radius: var(--radius-sm) !important;
+  border: 1px solid transparent !important;
+  transition: all 0.2s ease !important;
+}
+.stTabs [data-baseweb="tab"]:hover {
+  color: var(--text-primary) !important;
+  background: var(--bg-hover) !important;
+}
+.stTabs [aria-selected="true"] {
+  color: var(--accent) !important;
+  background: white !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* Metric Cards - Shopeers Analytics Style */
 div[data-testid="metric-container"] {
   background: var(--bg-surface) !important;
   border: 1px solid var(--border) !important;
   border-radius: var(--radius) !important;
-  padding: 1.2rem 1.4rem !important;
+  padding: 24px !important;
   box-shadow: var(--shadow) !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 div[data-testid="metric-container"]:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.06) !important;
-  border-color: var(--accent-glow) !important;
+  box-shadow: var(--shadow-md) !important;
+  transform: translateY(-4px) !important;
+  border-color: var(--accent-light) !important;
 }
 div[data-testid="metric-container"] label {
-  color: var(--text-secondary) !important;
+  color: var(--text-tertiary) !important;
   font-family: var(--font-sans) !important;
-  font-weight: 500 !important;
-  font-size: 0.72rem !important;
-  letter-spacing: 0.05em !important;
-  text-transform: uppercase !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.1px !important;
+  margin-bottom: 8px !important;
 }
 div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
-  color: var(--accent) !important;
-  font-family: var(--font-display) !important;
-  font-size: 2.2rem !important;
-  letter-spacing: 0.02em !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-sans) !important;
+  font-weight: 800 !important;
+  font-size: 34px !important;
+  letter-spacing: -1px !important;
 }
 
-/* Buttons & Calls to Action */
+/* Premium Buttons */
 .stButton > button {
-  background: linear-gradient(135deg, #EB643E 0%, #F1683E 100%) !important;
+  background: var(--accent) !important;
   color: #FFFFFF !important;
   border: none !important;
   border-radius: var(--radius-sm) !important;
   font-family: var(--font-sans) !important;
-  font-size: 0.85rem !important;
-  letter-spacing: 0.02em !important;
+  font-size: 14px !important;
   font-weight: 600 !important;
-  padding: 0.6rem 1.6rem !important;
+  padding: 12px 24px !important;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  box-shadow: 0 4px 12px var(--accent-glow) !important;
+  box-shadow: 0 4px 6px -1px rgba(21, 46, 174, 0.1), 0 2px 4px -1px rgba(21, 46, 174, 0.06) !important;
 }
 .stButton > button:hover {
-  box-shadow: 0 6px 20px var(--accent-glow) !important;
+  filter: brightness(1.1) !important;
   transform: translateY(-1px) !important;
-  opacity: 0.95 !important;
+  box-shadow: 0 10px 15px -3px rgba(21, 46, 174, 0.2) !important;
 }
 
-/* Secondary Actions / Outlined Buttons */
+/* Secondary Button Fallback (Simplified) */
 .stButton > button[kind="secondary"] {
-  background: transparent !important;
-  color: var(--accent) !important;
-  border: 1.5px solid var(--accent) !important;
-  box-shadow: none !important;
-}
-.stButton > button[kind="secondary"]:hover {
-  background: var(--accent-dim) !important;
-  box-shadow: none !important;
+  background: white !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
 }
 
-/* Modern Clean Containers */
+/* Input Fields */
+input, textarea, select {
+  background: #FFFFFF !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-sans) !important;
+  padding: 12px 16px !important;
+  transition: all 0.2s ease !important;
+  font-size: 14px !important;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 4px var(--accent-glow) !important;
+}
+
+/* Glass Cards & Surfaces */
 .glass-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1rem;
-  box-shadow: var(--shadow);
+  background: #FFFFFF !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  padding: 24px !important;
+  box-shadow: var(--shadow) !important;
+  margin-bottom: 1.5rem !important;
 }
 
-/* Audit Specific Styles */
-.violation-flag {
-  background: rgba(239,68,68,0.05);
-  border-left: 4px solid var(--danger);
-  padding: 10px 14px;
-  border-radius: 4px;
-  margin: 6px 0;
-  font-size: 0.8rem;
-  color: #991B1B;
-}
-.ok-flag {
-  background: rgba(16,185,129,0.05);
-  border-left: 4px solid var(--ok);
-  padding: 10px 14px;
-  border-radius: 4px;
-  margin: 6px 0;
-  font-size: 0.8rem;
-  color: #065F46;
-}
-
+/* Section Headers */
 .section-header {
-  font-family: var(--font-display);
-  font-size: 1.6rem;
+  font-size: 24px;
+  font-weight: 800;
   color: var(--text-primary);
-  letter-spacing: 0.02em;
-  margin-bottom: 0.8rem;
-  border-bottom: 2px solid var(--accent);
-  display: inline-block;
-  padding-right: 2rem;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.5px;
 }
 
+/* Badges */
 .mono-badge {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  padding: 3px 10px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-m);
-  border-radius: 20px;
-  color: var(--accent);
-  display: inline-block;
+  background: var(--bg-hover) !important;
+  color: var(--accent) !important;
+  border: 1px solid var(--border) !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  display: inline-block !important;
 }
 
-/* Transcript Enhancements */
-.stChatFloatingInputContainer {
-  background-color: var(--bg-base) !important;
+/* Status Flags */
+.verdict-good {
+  color: #059669 !important;
+  background: #ECFDF5 !important;
+  padding: 4px 12px !important;
+  border-radius: 20px !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  display: inline-block !important;
+}
+.verdict-fail {
+  color: #DC2626 !important;
+  background: #FEF2F2 !important;
+  padding: 4px 12px !important;
+  border-radius: 20px !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  display: inline-block !important;
+}
+
+/* Transcript Bubbles */
+.transcript-agent {
+  background: #F8FAFC !important;
+  border-left: 4px solid var(--accent) !important;
+  padding: 16px !important;
+  border-radius: 0 12px 12px 0 !important;
+  margin-bottom: 12px !important;
+}
+.transcript-customer {
+  background: white !important;
+  border-left: 4px solid #94A3B8 !important;
+  padding: 16px !important;
+  border-radius: 0 12px 12px 0 !important;
+  margin-bottom: 12px !important;
 }
 
 /* Custom Scrollbar */
@@ -196,12 +273,13 @@ div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
   background: var(--bg-base);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border-m);
-  border-radius: 10px;
+  background: var(--border);
+  border-radius: 20px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent);
+  background: var(--text-muted);
 }
+
 </style>
 """
 

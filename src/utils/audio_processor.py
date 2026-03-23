@@ -167,5 +167,5 @@ class AudioProcessor:
     @staticmethod
     def duration_label(seconds: int) -> str:
         """ Formats a second count into a standard MM:SS timestamp. """
-        m, s = divmod(seconds, 60)
+        m, s = divmod(int(seconds), 60)
         return f"{m}:{s:02d}"

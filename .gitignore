@@ -19,6 +19,7 @@ build/
 venv/
 env/
 .venv/
+.env
 .env/
 ENV/
 
@@ -48,3 +49,5 @@ desktop.ini
 # Logs
 *.log
 *.pid
+venv/
+.env
