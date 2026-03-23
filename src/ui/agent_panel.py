@@ -726,9 +726,7 @@ class AgentPanel:
             if transcript_override is None:
                 st.write("⚙ pydub — converting audio…")
                 # pydub is CPU bound, use thread
-                wav_bytes, meta, warning_msg = await asyncio.to_thread(self._audio.convert_to_wav, file_bytes, filename)
-                if warning_msg:
-                    st.warning(warning_msg)
+                wav_bytes, meta = await asyncio.to_thread(self._audio.convert_to_wav, file_bytes, filename)
                 duration = meta.get("duration_sec", 0)
 
                 os.makedirs("data/uploads", exist_ok=True)

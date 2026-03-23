@@ -39,7 +39,7 @@ class AudioProcessor:
         self,
         file_bytes: bytes,
         filename: str,
-    ) -> tuple[bytes, dict, Optional[str]]:
+    ) -> tuple[bytes, dict]:
         """
         Standardizes an audio file for downstream transcription.
         
@@ -72,12 +72,14 @@ class AudioProcessor:
 
             buf = io.BytesIO()
             seg.export(buf, format="wav")
-            return buf.getvalue(), meta, None
+            return buf.getvalue(), meta
         except ImportError:
             # Fallback if ffmpeg/pydub is not in the environment.
-            return file_bytes, meta, "pydub not installed — audio conversion skipped."
+            st.warning("pydub not installed — audio conversion skipped.")
+            return file_bytes, meta
         except Exception as exc:
-            return file_bytes, meta, f"pydub conversion error ({exc}). Using original file."
+            st.warning(f"pydub conversion error ({exc}). Using original file.")
+            return file_bytes, meta
 
     # Narrative Generation (Smart Summary) 
 
