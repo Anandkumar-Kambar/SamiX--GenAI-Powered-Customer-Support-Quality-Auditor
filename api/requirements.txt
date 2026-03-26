@@ -11,7 +11,6 @@ openai-whisper>=20231117
 
 # Audio
 pydub>=0.25.1
-audioop_lts
 
 # RAG Stack
 langchain>=0.2.5
