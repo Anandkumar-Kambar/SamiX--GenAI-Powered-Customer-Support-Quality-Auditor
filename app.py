@@ -13,6 +13,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+import audioop
 
 # Disable Hugging Face telemetry and legacy warnings for a cleaner console output.
 os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
@@ -24,12 +25,7 @@ try:
     Config.print_status()
 except Exception as e:
     print(f"⚠ Warning: Could not load config module: {e}")
-try:
-    import audioop
-except ImportError:
-    import audioop_lts
-    sys.modules["audioop"] = audioop_lts
-
+ 
 import streamlit as st
 from PIL import Image
 
