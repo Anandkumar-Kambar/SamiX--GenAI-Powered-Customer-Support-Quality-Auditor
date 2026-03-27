@@ -1,6 +1,5 @@
 """
 SamiX - Quality Auditor Entry Point
-Status: Final Build - Ready for Deploy
 """
 from __future__ import annotations
 
@@ -13,16 +12,17 @@ from PIL import Image
 try:
     from src.auth.authenticator import AuthManager
     from src.db.utils import get_db_engine
-    from src.db.models import init_tables  # Added for auto-initialization
+    from src.db.models import init_tables
     from src.api_client import SamiXClient
     from src.ui.login_page import LoginPage
     from src.ui.dashboard import DashboardPage
     from src.ui.styles import inject_css
 except ImportError as e:
     st.error(f"❌ Initialization Error: {e}")
+    st.info("Ensure you have __init__.py files in your src subdirectories.")
     st.stop()
 
-# 1. Page Configuration (Must be first)
+# 1. Page Configuration
 st.set_page_config(
     page_title="SamiX · Quality Auditor",
     page_icon="🛡️",
@@ -31,7 +31,7 @@ st.set_page_config(
 )
 
 def initialize_session():
-    """Sets default session states ONLY if they don't exist yet."""
+    """Sets default session states."""
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
     if "user_data" not in st.session_state:
@@ -41,8 +41,10 @@ def initialize_session():
 
 @st.cache_resource
 def init_managers():
-    """Initialize core engines once and cache them."""
-    api_url = st.secrets.get("BACKEND_URL") or os.getenv("SAMIX_API_URL", "http://localhost:8000")
+    """Initialize core engines with Render-compatible URL mapping."""
+    # Priority: Environment Var (Render) -> Streamlit Secrets -> Localhost
+    api_url = os.getenv("BACKEND_URL") or st.secrets.get("BACKEND_URL") or "http://localhost:8000"
+    
     return {
         "api": SamiXClient(base_url=api_url),
         "auth": AuthManager(get_db_engine())
@@ -51,7 +53,7 @@ def init_managers():
 def render_sidebar_header(api: SamiXClient):
     """Renders the branding and backend health status."""
     with st.sidebar:
-        # Logo fallback
+        # Logo handling
         logo_path = Path("assets/images/logo.png")
         if logo_path.exists():
             st.image(Image.open(logo_path), width=100)
@@ -61,33 +63,33 @@ def render_sidebar_header(api: SamiXClient):
         st.markdown('<div style="text-align:center;color:#F8FAFC;font-weight:800;font-size:1.3rem;">SamiX</div>', unsafe_allow_html=True)
         st.divider()
 
-        # Health Check
-        status = api.health()
+        # Health Check with graceful failure
         st.markdown('<div style="font-size:.65rem;font-weight:700;color:#64748B;">SERVER STATUS</div>', unsafe_allow_html=True)
-        if status.get("status") == "healthy":
-            st.success("● API Engine Online")
-        else:
-            st.warning("● Backend Waking Up...")
+        try:
+            status = api.health()
+            if status.get("status") == "healthy":
+                st.success("● API Engine Online")
+            else:
+                st.warning("● Backend Waking Up...")
+        except Exception:
+            st.error("● Backend Offline")
 
 def main():
-    # 1. Trigger database and admin creation
+    # 1. System Initializations
     init_tables() 
-    
-    # 2. UI Setup
     inject_css()
     initialize_session()
     
+    # 2. Setup Managers
     managers = init_managers()
 
     # 3. Routing Logic
     if not st.session_state.authenticated:
-        # Show Login Page if not authenticated
         LoginPage(managers["auth"]).render()
     else:
-        # Show Sidebar Branding
         render_sidebar_header(managers["api"])
         
-        # Launch Dashboard (Handles Admin vs Agent views internally)
+        # Launch Dashboard
         dashboard = DashboardPage(
             history_manager=managers["auth"].db,
             kb_manager=managers["api"]
