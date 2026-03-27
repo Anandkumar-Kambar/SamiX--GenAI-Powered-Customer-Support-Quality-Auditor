@@ -1,10 +1,10 @@
 """
-SamiX login page.
+SamiX Authentication Gateway
+Handles brand storytelling and secure access with session persistence.
 """
 from __future__ import annotations
 
 from pathlib import Path
-
 from PIL import Image
 import streamlit as st
 
@@ -14,21 +14,31 @@ from src.auth.authenticator import AuthManager
 class LoginPage:
     def __init__(self, auth: AuthManager) -> None:
         self._auth = auth
+        # Initialize session state keys if they don't exist
+        if "authenticated" not in st.session_state:
+            st.session_state.authenticated = False
+        if "user_data" not in st.session_state:
+            st.session_state.user_data = None
 
     def render(self) -> None:
-        left, right = st.columns([1.15, 0.95], gap="large")
+        """Main render loop for the login screen."""
+        # Use a centered container for better mobile responsiveness
+        left, right = st.columns([1.2, 0.8], gap="large")
+        
         with left:
             self._render_brand()
+        
         with right:
             self._render_form()
 
     def _render_brand(self) -> None:
+        """Renders the left-side marketing and tech-stack overview."""
         logo_path = Path("assets/images/logo.png")
         st.markdown('<div class="samix-hero">', unsafe_allow_html=True)
 
         if logo_path.exists():
             try:
-                st.image(Image.open(logo_path), width=104)
+                st.image(Image.open(logo_path), width=100)
             except Exception:
                 self._fallback_logo()
         else:
@@ -37,31 +47,24 @@ class LoginPage:
         st.markdown(
             """
             <div class="samix-eyebrow">AI Quality Operations</div>
-            <div class="samix-title">Review support calls with speed, consistency, and grounded policy checks.</div>
-            <div class="samix-subtitle">
-              SamiX combines transcription, LLM scoring, and LangChain + Milvus retrieval
-              into one deployable Streamlit workspace for teams that need cleaner QA operations.
-            </div>
+            <h1 class="samix-title">Review support calls with speed and grounded policy checks.</h1>
+            <p class="samix-subtitle">
+              SamiX orchestrates Groq-powered LLMs and Milvus RAG to automate 
+              compliance audits for high-volume support teams.
+            </p>
+            
             <div class="samix-kpi-grid">
               <div class="samix-kpi-card">
-                <div class="samix-kpi-label">Scoring Engine</div>
-                <div class="samix-kpi-value">Groq</div>
-                <div class="samix-kpi-note">summary + audit scoring</div>
+                <div class="samix-kpi-label">LLM Engine</div>
+                <div class="samix-kpi-value">Groq Llama 3</div>
               </div>
               <div class="samix-kpi-card">
-                <div class="samix-kpi-label">Transcription</div>
-                <div class="samix-kpi-value">DG / Whisper</div>
-                <div class="samix-kpi-note">cloud primary, local fallback</div>
-              </div>
-              <div class="samix-kpi-card">
-                <div class="samix-kpi-label">RAG Stack</div>
+                <div class="samix-kpi-label">Vector DB</div>
                 <div class="samix-kpi-value">Milvus Lite</div>
-                <div class="samix-kpi-note">LangChain retrieval + fallback</div>
               </div>
               <div class="samix-kpi-card">
-                <div class="samix-kpi-label">Persistence</div>
-                <div class="samix-kpi-value">SQLite</div>
-                <div class="samix-kpi-note">audits, users, API artifacts</div>
+                <div class="samix-kpi-label">Audio STT</div>
+                <div class="samix-kpi-value">Deepgram</div>
               </div>
             </div>
             """,
@@ -70,15 +73,16 @@ class LoginPage:
         st.markdown("</div>", unsafe_allow_html=True)
 
     def _fallback_logo(self) -> None:
+        """SaaS-style CSS logo if image asset is missing."""
         st.markdown(
             """
-            <div style="display:flex;align-items:center;gap:0.9rem;margin-bottom:1rem;">
-              <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#1d4ed8,#2563eb);display:flex;align-items:center;justify-content:center;box-shadow:0 14px 28px rgba(37,99,235,0.22);">
-                <span style="color:#fff;font-size:1.4rem;font-weight:800;">S</span>
+            <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:2rem;">
+              <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#6366F1,#4F46E5);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 15px -3px rgba(79,70,229,0.4);">
+                <span style="color:#fff;font-size:1.2rem;font-weight:800;">S</span>
               </div>
               <div>
-                <div style="font-size:1.4rem;font-weight:800;color:#0f172a;letter-spacing:-0.03em;">SamiX</div>
-                <div style="font-size:0.75rem;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;">Customer Support QA</div>
+                <div style="font-size:1.4rem;font-weight:800;color:#F1F5F9;letter-spacing:-0.03em;">SamiX</div>
+                <div style="font-size:0.7rem;color:#6366F1;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;">Intelligence</div>
               </div>
             </div>
             """,
@@ -86,52 +90,55 @@ class LoginPage:
         )
 
     def _render_form(self) -> None:
+        """Renders the login/register toggle and handles form submission."""
         st.markdown(
             """
             <div class="samix-shell">
-              <div class="samix-eyebrow">Secure Access</div>
-              <div class="samix-title" style="font-size:1.65rem;">Sign in to SamiX</div>
-              <div class="samix-subtitle" style="margin-bottom:1rem;">
-                Use your workspace credentials to access audits, knowledge-base tools, and reports.
-              </div>
+              <h2 style="color:white; margin-bottom:0.5rem;">Access Workspace</h2>
+              <p style="color:#94A3B8; font-size:0.9rem;">Sign in to review audits or manage policies.</p>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-        tab_login, tab_register = st.tabs(["Sign in", "Create account"])
+        tab_login, tab_register = st.tabs(["Sign In", "Create Account"])
 
         with tab_login:
-            with st.form("login_form", clear_on_submit=False):
-                email = st.text_input("Email", placeholder="name@company.com")
-                password = st.text_input("Password", type="password", placeholder="Enter your password")
-                submit = st.form_submit_button("Sign in", use_container_width=True)
+            with st.form("login_form"):
+                email = st.text_input("Email", placeholder="admin@samix.ai")
+                password = st.text_input("Password", type="password")
+                submit = st.form_submit_button("Enter Dashboard", use_container_width=True)
 
                 if submit:
-                    if not email or not password:
-                        st.error("Enter both email and password.")
-                    elif self._auth.login(email, password):
+                    user = self._auth.login(email, password)
+                    if user:
+                        # SET SESSION STATE
+                        st.session_state.authenticated = True
+                        st.session_state.user_data = user  # Assuming user object has 'role', 'name'
+                        st.success("Authentication successful!")
                         st.rerun()
                     else:
-                        st.error("Incorrect email or password.")
+                        st.error("Invalid email or password.")
 
             if self._auth.is_pending():
-                st.caption("Default admin login: `admin@samix.ai` / `admin`")
+                st.info("💡 Protip: Use `admin@samix.ai` / `admin` for initial setup.")
 
         with tab_register:
-            with st.form("register_form", clear_on_submit=True):
-                name = st.text_input("Full name", placeholder="Jane Doe")
-                email = st.text_input("Work email", placeholder="name@company.com")
-                password = st.text_input("Password", type="password", placeholder="Create a password")
-                confirm = st.text_input("Confirm password", type="password", placeholder="Re-enter password")
-                submit = st.form_submit_button("Create account", use_container_width=True)
+            with st.form("register_form"):
+                name = st.text_input("Full Name")
+                reg_email = st.text_input("Work Email")
+                reg_pass = st.text_input("Password", type="password")
+                reg_conf = st.text_input("Confirm Password", type="password")
+                
+                # Role selection for demonstration (usually handled via invite or admin)
+                role = st.selectbox("Role", ["Agent", "Supervisor"])
+                
+                reg_submit = st.form_submit_button("Create Account", use_container_width=True)
 
-                if submit:
-                    if not name or not email or not password:
-                        st.error("Fill in all fields.")
-                    elif password != confirm:
+                if reg_submit:
+                    if reg_pass != reg_conf:
                         st.error("Passwords do not match.")
-                    elif self._auth.register(email, name, password):
-                        st.success("Account created. You can sign in now.")
+                    elif self._auth.register(reg_email, name, reg_pass, role=role.lower()):
+                        st.success("Account created! You can now sign in.")
                     else:
-                        st.error("That email is already registered or invalid.")
+                        st.error("Registration failed. Email may already be in use.")
