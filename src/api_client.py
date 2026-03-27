@@ -14,11 +14,14 @@ _TIMEOUT = httpx.Timeout(150.0, connect=10.0)
 
 class SamiXClient:
     def __init__(self, base_url: Optional[str] = None) -> None:
-        # Priority: 1. Secrets, 2. Env Var, 3. Localhost
+        """
+        Initializes the client. 
+        Priority: 1. Passed Arg, 2. Render Env Var, 3. Localhost
+        """
         self.base_url = (
-            base_url 
-            or st.secrets.get("SAMIX_API_URL") 
-            or os.getenv("SAMIX_API_URL", "http://localhost:8000")
+            base_url or 
+            os.getenv("BACKEND_URL") or 
+            os.getenv("SAMIX_API_URL", "http://localhost:8000")
         ).rstrip("/")
         
         self._client: Optional[httpx.Client] = None
@@ -43,27 +46,27 @@ class SamiXClient:
         """Asynchronous call to process audio and get scores."""
         if not self._async_client:
             self._async_client = httpx.AsyncClient(base_url=self.base_url, timeout=_TIMEOUT)
-        
+            
         files = {"file": (filename, file_bytes, "audio/mpeg")}
         data = {"agent_name": agent_name}
         
         resp = await self._async_client.post(
             "/api/v1/audit", 
             files=files, 
-            data=data,
+            data=data, 
             headers=self._get_auth_header()
         )
         resp.raise_for_status()
         return resp.json()
 
     async def query_rag(self, question: str) -> dict[str, Any]:
-        """POST /rag/query — Interfaces with Milvus via FastAPI."""
+        """POST /rag/query — Interfaces with the Knowledge Base via FastAPI."""
         if not self._async_client:
             self._async_client = httpx.AsyncClient(base_url=self.base_url, timeout=_TIMEOUT)
-        
+            
         resp = await self._async_client.post(
             "/api/v1/rag/query", 
-            json={"question": question},
+            json={"question": question}, 
             headers=self._get_auth_header()
         )
         resp.raise_for_status()
