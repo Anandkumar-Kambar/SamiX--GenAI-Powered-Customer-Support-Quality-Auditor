@@ -6,6 +6,7 @@ from __future__ import annotations
 import streamlit as st
 import bcrypt
 from sqlalchemy.orm import Session
+# These imports are required for the methods below to work
 from src.db.utils import get_user_by_email, create_user
 from src.utils.validators import is_valid_email
 
