@@ -1,6 +1,7 @@
 """
 SamiX - Quality Auditor Entry Point
 Location: /app.py
+Status: FIX #2 - Persistent Session Routing
 """
 from __future__ import annotations
 
@@ -12,7 +13,7 @@ from PIL import Image
 # Internal Imports
 try:
     from src.auth.authenticator import AuthManager
-    from src.db import get_db_engine
+    from src.db.utils import get_db_engine
     from src.api_client import SamiXClient
     from src.ui.login_page import LoginPage
     from src.ui.dashboard import DashboardPage
@@ -21,7 +22,7 @@ except ImportError as e:
     st.error(f"❌ Initialization Error: {e}")
     st.stop()
 
-# 1. Page Configuration
+# 1. Page Configuration (Must be first)
 st.set_page_config(
     page_title="SamiX · Quality Auditor",
     page_icon="🛡️",
@@ -29,9 +30,18 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+def initialize_session():
+    """Sets default session states ONLY if they don't exist yet."""
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+    if "user_data" not in st.session_state:
+        st.session_state.user_data = None
+    if "auth_token" not in st.session_state:
+        st.session_state.auth_token = None
+
 @st.cache_resource
 def init_managers():
-    """Initialize core engines once."""
+    """Initialize core engines once and cache them."""
     api_url = st.secrets.get("BACKEND_URL") or os.getenv("SAMIX_API_URL", "http://localhost:8000")
     return {
         "api": SamiXClient(base_url=api_url),
@@ -61,22 +71,22 @@ def render_sidebar_header(api: SamiXClient):
 
 def main():
     inject_css()
+    initialize_session()
     
-    # Initialize state
     managers = init_managers()
-    if "authenticated" not in st.session_state:
-        st.session_state.authenticated = False
 
-    # Routing
+    # Routing Logic
     if not st.session_state.authenticated:
+        # Show Login Page if not authenticated
         LoginPage(managers["auth"]).render()
     else:
+        # Show Sidebar Branding
         render_sidebar_header(managers["api"])
         
-        # Dashboard handles the internal navigation (Admin vs Agent)
+        # Launch Dashboard (Handles Admin vs Agent views internally)
         dashboard = DashboardPage(
-            history_manager=managers["auth"].db, # Local SQLite for history
-            kb_manager=managers["api"]           # API for RAG/Audits
+            history_manager=managers["auth"].db,
+            kb_manager=managers["api"]
         )
         dashboard.render()
 
