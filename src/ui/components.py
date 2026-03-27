@@ -25,10 +25,7 @@ def render_page_hero(eyebrow: str, title: str, subtitle: str, stats: list = None
     st.markdown(f'<p style="color: #94a3b8; font-size: 1.1rem; max-width: 600px; margin-bottom: 2rem;">{subtitle}</p>', unsafe_allow_html=True)
     
     if stats:
-        cols = st.columns(len(stats))
-        for i, (label, value, note) in enumerate(stats):
-            with cols[i]:
-                st.metric(label, value, note)
+        render_metrics_showcase(stats)
 
 def render_feature_cards():
     """Renders the main value propositions."""
@@ -42,7 +39,6 @@ def render_feature_cards():
 
 def render_testimonial(text: str, author: str, role: str):
     """
-    FIX: Added missing function to resolve Initialization Error.
     Renders a stylized quote for the Login Page sidebar.
     """
     st.markdown(f"""
@@ -62,7 +58,6 @@ def render_gauge(value: float, title: str, max_val: float = 10.0):
 def render_three_gauges(scores: Any):
     """Displays key performance indicators in three columns."""
     c1, c2, c3 = st.columns(3)
-    # Helper to handle both Dict and Object types from LLM output
     get_v = lambda a: getattr(scores, a, scores.get(a, 0)) if hasattr(scores, 'get') or hasattr(scores, a) else 0
     
     with c1: render_gauge(get_v("empathy"), "Empathy")
@@ -125,3 +120,17 @@ def build_history_dataframe(sessions: list) -> pd.DataFrame:
             "Score": f"{s.score}/10"
         } for s in sessions
     ])
+
+# --- 4. COMPATIBILITY BRIDGE (The fix for Initialization Errors) ---
+
+def render_metrics_showcase(stats: list):
+    """
+    Renders a row of metrics. 
+    Required by DashboardPage and ReportsPage to prevent ImportErrors.
+    """
+    if not stats:
+        return
+    cols = st.columns(len(stats))
+    for i, (label, value, note) in enumerate(stats):
+        with cols[i]:
+            st.metric(label, value, note)
