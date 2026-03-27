@@ -1,21 +1,18 @@
 """
 SamiX Database Utilities
 Thread Safety Enabled - Optimized for Render & Streamlit Cloud
-  
+Location: src/db/utils.py
 """
 import os
 import sqlite3
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from src.db.models import User # Ensure this exists in models.py
 
 def get_db_path():
     """Determines the persistent path for the SQLite database."""
-    # Check for Render persistent disk first
     if os.path.exists("/data"):
         return "/data/samix.db"
     
-    # Local fallback logic: Move up 3 levels from src/db/utils.py to root
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     data_dir = os.path.join(base_dir, "data")
     
@@ -38,14 +35,16 @@ def get_db() -> Session:
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     return SessionLocal()
 
-# --- AUTH HELPER FUNCTIONS (Required by AuthManager) ---
+# --- AUTH HELPER FUNCTIONS (Fixed Circular Imports) ---
 
 def get_user_by_email(session: Session, email: str):
     """Fetch a single user record by email."""
+    from src.db.models import User # Deferred import to break circular loop
     return session.query(User).filter(User.email == email).first()
 
 def create_user(session: Session, email: str, hashed_pw: str, name: str, role: str):
     """Inserts a new user into the database."""
+    from src.db.models import User # Deferred import to break circular loop
     new_user = User(
         email=email,
         hashed_password=hashed_pw,
