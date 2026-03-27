@@ -1,10 +1,8 @@
 """
 SamiX UI Component Library - Cloud Optimized
 A premium design system inspired by AirCover and modern SaaS interfaces.
-Handles both local object data and API-driven JSON structures.
 """
 from __future__ import annotations
-
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
@@ -15,8 +13,16 @@ from datetime import datetime
 from src.utils.history_manager import AuditScores, TranscriptTurn, WrongTurn
 
 # ----------------------------------------------------------------------------
-# 1. Page Foundations (Hero & Navigation)
+# 1. FIXED IMPORT SECTION (The Bridge)
 # ----------------------------------------------------------------------------
+
+def render_hero_section():
+    """Fixes the import error by redirecting to render_page_hero"""
+    render_page_hero(
+        eyebrow="AI AUDITOR",
+        title="SamiX Quality Suite",
+        subtitle="GenAI-Powered Customer Support Quality Auditor"
+    )
 
 def render_page_hero(
     eyebrow: str,
@@ -46,18 +52,16 @@ def render_page_hero(
                 """, unsafe_allow_html=True)
 
 # ----------------------------------------------------------------------------
-# 2. Visualization Engines (Gauges & Charts)
+# 2. Visualization Engines
 # ----------------------------------------------------------------------------
 
 def render_gauge(value: float, title: str, max_val: float = 10.0) -> None:
-    """Renders a sophisticated ECharts gauge with semantic coloring."""
     try:
         from streamlit_echarts import st_echarts
     except ImportError:
         st.metric(title, f"{value:.1f}/{max_val}")
         return
 
-    # Normalize to 0-100 for gauge display
     pct = min(100.0, max(0.0, (value / max_val) * 100))
     color = "#10B981" if pct >= 80 else "#F59E0B" if pct >= 60 else "#EF4444"
 
@@ -80,7 +84,6 @@ def render_gauge(value: float, title: str, max_val: float = 10.0) -> None:
     st_echarts(options=option, height="180px", key=f"gauge_{title}_{value}")
 
 def render_three_gauges(scores: Any) -> None:
-    """Renders the top 3 dimensions. Handles AuditScores object or dict."""
     def get_v(attr): 
         return getattr(scores, attr, scores.get(attr, 0)) if hasattr(scores, 'get') or hasattr(scores, attr) else 0
 
@@ -90,8 +93,6 @@ def render_three_gauges(scores: Any) -> None:
     with c3: render_gauge(get_v("compliance"), "Compliance")
 
 def render_dual_score_chart(scores: Any) -> None:
-    """Plotly chart comparing Agent Quality vs Customer Sentiment across turns."""
-    # Data extraction supporting objects and dicts
     agent_data = getattr(scores, 'agent_by_turn', scores.get('agent_by_turn', []))
     cust_data = getattr(scores, 'customer_sentiment', scores.get('customer_sentiment', []))
     
@@ -111,12 +112,10 @@ def render_dual_score_chart(scores: Any) -> None:
     st.plotly_chart(fig, use_container_width=True)
 
 # ----------------------------------------------------------------------------
-# 3. Session Details (Transcript & Violations)
+# 3. Session Details
 # ----------------------------------------------------------------------------
 
 def render_transcript(turns: list[Any], wrong_turns: Optional[list[Any]] = None) -> None:
-    """Renders a speaker-distinct chat interface."""
-    # Build a lookup for wrong turns to highlight them inline
     wrong_map = {}
     if wrong_turns:
         for wt in wrong_turns:
@@ -129,7 +128,6 @@ def render_transcript(turns: list[Any], wrong_turns: Optional[list[Any]] = None)
         t_id = getattr(turn, 'turn', turn.get('turn', 0))
         
         is_agent = speaker.upper() == "AGENT"
-        align = "left" if is_agent else "right"
         bg = "rgba(99, 102, 241, 0.1)" if is_agent else "rgba(148, 163, 184, 0.1)"
         border = "rgba(99, 102, 241, 0.3)" if is_agent else "rgba(148, 163, 184, 0.2)"
         
@@ -153,7 +151,6 @@ def render_transcript(turns: list[Any], wrong_turns: Optional[list[Any]] = None)
             """, unsafe_allow_html=True)
 
 def render_wrong_turns(wrong_turns: list[Any]) -> None:
-    """Deep-dive view for factual/policy errors."""
     if not wrong_turns:
         st.success("✅ No policy violations detected.")
         return
@@ -171,11 +168,10 @@ def render_wrong_turns(wrong_turns: list[Any]) -> None:
             st.caption(f"📚 Source: {source}")
 
 # ----------------------------------------------------------------------------
-# 4. Utilities (Financials, Dataframes, Badges)
+# 4. Utilities
 # ----------------------------------------------------------------------------
 
 def render_cost_card(token_count: int, cost_usd: float) -> None:
-    """Displays API efficiency metrics."""
     st.markdown(f"""
         <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(16, 185, 129, 0.1)); border: 1px solid rgba(255,255,255,0.05); padding: 1.25rem; border-radius: 12px;">
             <div style="color: #94A3B8; font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">Cloud Processing Cost</div>
@@ -185,7 +181,6 @@ def render_cost_card(token_count: int, cost_usd: float) -> None:
     """, unsafe_allow_html=True)
 
 def render_filename_badge(filename: str, session_id: str) -> None:
-    """Identity badge for the active audit session."""
     st.markdown(f"""
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem;">
             <span style="background: #6366F1; color: white; padding: 3px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800;">AUDIT</span>
@@ -195,7 +190,6 @@ def render_filename_badge(filename: str, session_id: str) -> None:
     """, unsafe_allow_html=True)
 
 def build_history_dataframe(sessions: list[Any]) -> pd.DataFrame:
-    """Maps AuditSession objects to a UI-friendly Table."""
     rows = []
     for s in sessions:
         rows.append({
@@ -203,8 +197,8 @@ def build_history_dataframe(sessions: list[Any]) -> pd.DataFrame:
             "Timestamp": s.timestamp.strftime("%b %d, %H:%M") if isinstance(s.timestamp, datetime) else str(s.timestamp),
             "File Name": s.filename,
             "Agent": s.agent_name,
-            "Score": f"{s.scores.final_score}/100" if hasattr(s.scores, 'final_score') else f"{s.scores.get('final_score')}/100",
-            "Verdict": s.scores.verdict if hasattr(s.scores, 'verdict') else s.scores.get('verdict'),
+            "Score": f"{s.scores.final_score}/100" if hasattr(s.scores, 'final_score') else f"{s.scores.get('final_score', 0)}/100",
+            "Verdict": s.scores.verdict if hasattr(s.scores, 'verdict') else s.scores.get('verdict', 'N/A'),
             "Violations": s.violations
         })
     return pd.DataFrame(rows)
