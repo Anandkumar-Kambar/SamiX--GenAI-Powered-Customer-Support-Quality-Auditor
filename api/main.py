@@ -1,74 +1,59 @@
 """
 SamiX Backend API
-Status: Production Ready - Render Sync (Port 10000)
+Status: Production Ready - Streamlit Cloud to Render Sync
 """
 import os
 import uvicorn
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 
-# 1. Define Request Schema (Matches src/api_client.py)
+# 1. Define Request Schema
 class QueryRequest(BaseModel):
     question: str
 
-app = FastAPI(title="SamiX API Engine", version="1.0.0")
+app = FastAPI(title="SamiX API Engine")
 
-# 2. CORS Configuration
-# This is mandatory for Streamlit (Frontend) to talk to FastAPI (Backend)
+# 2. CORS - This is the most important part for Streamlit Cloud
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, you can replace "*" with your Streamlit URL
+    # Allow your specific Streamlit Cloud URL for security
+    # Or use ["*"] to allow all during testing
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 3. Health Check
-# Used by the Streamlit sidebar to show "API Engine Online"
 @app.get("/health")
 def health_check():
-    return {
-        "status": "healthy",
-        "environment": os.getenv("RENDER", "local"),
-        "services": {"groq": True, "deepgram": True}
-    }
+    return {"status": "healthy", "environment": "render-production"}
 
-# 4. Audio Audit Endpoint
 @app.post("/api/v1/audit")
 async def run_audit(
     file: UploadFile = File(...),
     agent_name: str = Form(...)
 ):
-    """
-    Receives audio from Streamlit and returns audit results.
-    """
     try:
-        # This is where your Deepgram + Groq logic will live
+        # Mocking the AI response
         return {
             "score": 85,
-            "sentiment": "Positive",
-            "duration": 124,
-            "transcript": f"Processed {file.filename} for agent {agent_name}.",
+            "transcript": f"Auditing {file.filename} for {agent_name}...",
             "status": "success"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 5. Knowledge Base (RAG) Endpoint
 @app.post("/api/v1/rag/query")
 async def query_kb(request: QueryRequest):
-    """
-    Handles JSON requests from the frontend SamiXClient.
-    """
     return {
-        "answer": f"Policy Result: {request.question} is verified in the 2026 handbook.",
-        "sources": ["compliance_manual_v1.pdf"]
+        "answer": f"Found info for: {request.question}",
+        "sources": ["manual_2026.pdf"]
     }
 
-# 6. Render-Ready Entry Point
 if __name__ == "__main__":
-    # We use 10000 to match the BACKEND_URL in your render.yaml
+    # Render provides a $PORT environment variable. 
+    # Usually, FastAPI apps on Render listen on 10000 or $PORT.
     port = int(os.getenv("PORT", 10000))
     uvicorn.run(app, host="0.0.0.0", port=port)
