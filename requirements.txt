@@ -1,56 +1,25 @@
-# Core UI Framework (Streamlit) 
+# ── Core UI Framework ──
 streamlit>=1.35.0
 streamlit-authenticator>=0.3.2
 streamlit-echarts>=0.4.0
 audio-recorder-streamlit>=0.0.10
 
-# Image Processing
+# ── Image & Visualization ──
 Pillow>=10.0.0
-
-# AI & Language Models (Groq API) 
-groq>=0.9.0
-
-# Speech-to-Text (STT) Engines 
-deepgram-sdk>=3.2.0
-openai-whisper>=20231117
-
-# Audio Handling & TTS 
-pydub>=0.25.1
-gTTS>=2.5.1
-pyttsx3>=2.90
-
-# Retrieval-Augmented Generation (RAG) Stack 
-langchain>=0.2.5
-langchain-community>=0.2.5
-langchain-text-splitters>=0.2.2
-langchain-huggingface>=0.0.3
-sentence-transformers>=3.0.0
-pymilvus>=2.5.3
-langchain-milvus>=0.1.7
-pymilvus[milvus_lite]
-rank_bm25>=0.2.2
-
-# Document Parsing 
-pypdf>=4.2.0
-python-docx>=1.1.0
-
-# Data Processing & Visualization 
 pandas>=2.2.0
 numpy>=1.26.0
 plotly>=5.22.0
 
-# Reporting & Export 
+# ── Backend Communication (The Bridge) ──
+requests>=2.32.0
+httpx>=0.27.0
+python-dotenv>=1.0.1
+
+# ── Reporting & Export ──
 reportlab>=4.2.2
 openpyxl>=3.1.4
 
-# Security & Utilities 
+# ── Security & Auth Utilities ──
 bcrypt>=4.1.3
 PyYAML>=6.0.1
-python-dotenv>=1.0.1
-requests>=2.32.0
-httpx>=0.27.0
-
-# FastAPI Backend
-fastapi>=0.115.0
-uvicorn[standard]>=0.30.0
-python-multipart>=0.0.7
+pydantic>=2.6.1
