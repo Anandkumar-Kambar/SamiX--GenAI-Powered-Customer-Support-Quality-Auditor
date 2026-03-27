@@ -1,5 +1,6 @@
-"""
+ """
 SamiX - Quality Auditor Entry Point
+Status: Final Build - Streamlit Cloud to Render Production
 """
 from __future__ import annotations
 
@@ -19,7 +20,7 @@ try:
     from src.ui.styles import inject_css
 except ImportError as e:
     st.error(f"❌ Initialization Error: {e}")
-    st.info("Ensure you have __init__.py files in your src subdirectories.")
+    st.info("Check: 1. Requirements installed? 2. __init__.py files in src folders?")
     st.stop()
 
 # 1. Page Configuration
@@ -31,7 +32,7 @@ st.set_page_config(
 )
 
 def initialize_session():
-    """Sets default session states."""
+    """Sets default session states to prevent KeyErrors."""
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
     if "user_data" not in st.session_state:
@@ -41,9 +42,12 @@ def initialize_session():
 
 @st.cache_resource
 def init_managers():
-    """Initialize core engines with Render-compatible URL mapping."""
-    # Priority: Environment Var (Render) -> Streamlit Secrets -> Localhost
-    api_url = os.getenv("BACKEND_URL") or st.secrets.get("BACKEND_URL") or "http://localhost:8000"
+    """
+    Initializes core engines. 
+    On Streamlit Cloud, it prioritizes st.secrets['BACKEND_URL'].
+    """
+    # Priority: Streamlit Cloud Secrets -> Local Environment -> Default Localhost
+    api_url = st.secrets.get("BACKEND_URL") or os.getenv("BACKEND_URL") or "http://localhost:10000"
     
     return {
         "api": SamiXClient(base_url=api_url),
@@ -51,7 +55,7 @@ def init_managers():
     }
 
 def render_sidebar_header(api: SamiXClient):
-    """Renders the branding and backend health status."""
+    """Renders the branding and performs a non-blocking backend health check."""
     with st.sidebar:
         # Logo handling
         logo_path = Path("assets/images/logo.png")
@@ -63,16 +67,16 @@ def render_sidebar_header(api: SamiXClient):
         st.markdown('<div style="text-align:center;color:#F8FAFC;font-weight:800;font-size:1.3rem;">SamiX</div>', unsafe_allow_html=True)
         st.divider()
 
-        # Health Check with graceful failure
+        # Health Check UI
         st.markdown('<div style="font-size:.65rem;font-weight:700;color:#64748B;">SERVER STATUS</div>', unsafe_allow_html=True)
         try:
             status = api.health()
             if status.get("status") == "healthy":
                 st.success("● API Engine Online")
             else:
-                st.warning("● Backend Waking Up...")
+                st.warning("● API Waking Up...")
         except Exception:
-            st.error("● Backend Offline")
+            st.error("● API Connection Failed")
 
 def main():
     # 1. System Initializations
@@ -81,20 +85,4 @@ def main():
     initialize_session()
     
     # 2. Setup Managers
-    managers = init_managers()
-
-    # 3. Routing Logic
-    if not st.session_state.authenticated:
-        LoginPage(managers["auth"]).render()
-    else:
-        render_sidebar_header(managers["api"])
-        
-        # Launch Dashboard
-        dashboard = DashboardPage(
-            history_manager=managers["auth"].db,
-            kb_manager=managers["api"]
-        )
-        dashboard.render()
-
-if __name__ == "__main__":
-    main()
+    managers = init
