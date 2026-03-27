@@ -11,20 +11,28 @@ from PIL import Image
 # Internal Imports
 try:
     from src.auth.authenticator import AuthManager
-    from src.db.utils import get_db_engine
+    from src.db.utils import get_db_engine, get_db
     from src.db.models import init_tables
-    from src.api_client import SamiXClient
+    # Ensure src/api_client.py contains the SamiXClient class
+    from src.api_client import SamiXClient 
     from src.ui.login_page import LoginPage
     from src.ui.dashboard import DashboardPage
     from src.ui.styles import inject_css
 except ImportError as e:
     st.error(f"❌ Initialization Error: {e}")
-    st.info("Ensure every folder in 'src/' has an empty __init__.py file.")
+    st.info("Check: Ensure every folder in 'src/' has an empty __init__.py file.")
     st.stop()
 
-st.set_page_config(page_title="SamiX · Quality Auditor", page_icon="🛡️", layout="wide")
+# 1. Page Configuration
+st.set_page_config(
+    page_title="SamiX · Quality Auditor", 
+    page_icon="🛡️", 
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 def initialize_session():
+    """Initializes global session state variables."""
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
     if "user_data" not in st.session_state:
@@ -32,37 +40,54 @@ def initialize_session():
 
 @st.cache_resource
 def init_managers():
-    # Pulls the Render URL from Streamlit Cloud Secrets
-    api_url = st.secrets.get("BACKEND_URL") or "http://localhost:10000"
+    """
+    Initializes core engine connections once.
+    BACKEND_URL should be set in Streamlit Cloud Secrets.
+    """
+    api_url = st.secrets.get("BACKEND_URL", "http://localhost:10000")
+    engine = get_db_engine()
+    
     return {
         "api": SamiXClient(base_url=api_url),
-        "auth": AuthManager(get_db_engine())
+        "auth": AuthManager(engine),
+        "db": get_db() # Standalone session for history/reports
     }
 
 def main():
+    # Initialize Database Tables & CSS
     init_tables() 
     inject_css()
     initialize_session()
+    
+    # Load Managers
     managers = init_managers()
 
+    # Route: Login vs Dashboard
     if not st.session_state.authenticated:
-        LoginPage(managers["auth"]).render()
+        login_page = LoginPage(managers["auth"])
+        login_page.render()
     else:
-        # Render Sidebar with Health Check
+        # Render Sidebar Health Check
         with st.sidebar:
-            st.markdown("### SamiX Status")
+            st.markdown("### System Status")
             try:
-                if managers["api"].health().get("status") == "healthy":
-                    st.success("● API Engine Online")
+                # Assuming SamiXClient has a health() method
+                health = managers["api"].health()
+                if health.get("status") == "healthy":
+                    st.success("● AI Engine Online")
                 else:
-                    st.warning("● API Waking Up...")
-            except:
-                st.error("● API Connection Failed")
+                    st.warning("● AI Engine Waking Up...")
+            except Exception:
+                st.error("● API Connection Offline")
+            
+            st.divider()
         
-        DashboardPage(
-            history_manager=managers["auth"].db,
+        # Main Dashboard View
+        dashboard = DashboardPage(
+            history_manager=managers["db"],
             kb_manager=managers["api"]
-        ).render()
+        )
+        dashboard.render()
 
 if __name__ == "__main__":
     main()
