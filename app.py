@@ -1,4 +1,4 @@
- """
+"""
 SamiX - Quality Auditor Entry Point
 Status: Final Build - Streamlit Cloud to Render Production
 """
@@ -85,4 +85,22 @@ def main():
     initialize_session()
     
     # 2. Setup Managers
-    managers = init
+    managers = init_managers()
+
+    # 3. Routing Logic
+    if not st.session_state.authenticated:
+        # Show Login Page if not authenticated
+        LoginPage(managers["auth"]).render()
+    else:
+        # Show Sidebar Branding
+        render_sidebar_header(managers["api"])
+        
+        # Launch Dashboard (Handles Admin vs Agent views internally)
+        dashboard = DashboardPage(
+            history_manager=managers["auth"].db,
+            kb_manager=managers["api"]
+        )
+        dashboard.render()
+
+if __name__ == "__main__":
+    main()
