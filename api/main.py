@@ -26,13 +26,8 @@ if str(PROJECT_ROOT) not in sys.path:
 os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
 os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
 
-# Audioop polyfill (Python 3.13+)
-try:
-    import audioop
-except ImportError:
-    import audioop_lts
-    sys.modules["audioop"] = audioop_lts
-
+# Audioop polyfill
+import audioop
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
