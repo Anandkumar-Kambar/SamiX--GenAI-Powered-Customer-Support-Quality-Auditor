@@ -1,139 +1,131 @@
 """
 SamiX - Quality Auditor Entry Point (Cloud Optimized)
-Connects to the Render FastAPI backend for all heavy processing.
+Main Orchestrator connecting the UI components to the Render Backend.
 """
 from __future__ import annotations
 
 import os
-import sys
-import requests
 from pathlib import Path
 from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
 
 import streamlit as st
 from PIL import Image
 
-# --- BACKEND CONNECTION ---
-# Point this to your Render URL in Streamlit Secrets
-BACKEND_URL = st.secrets.get("BACKEND_URL", "http://localhost:8000")
+# Load local environment variables
+load_dotenv()
 
-def check_backend_health():
-    """Check if Render backend is awake."""
-    try:
-        resp = requests.get(f"{BACKEND_URL}/health", timeout=5)
-        return resp.json() if resp.status_code == 200 else None
-    except:
-        return None
+# --- PROJECT IMPORTS ---
+try:
+    from src.auth.authenticator import AuthManager
+    from src.db import get_db
+    from src.api_client import SamiXClient
+    from src.ui.login_page import LoginPage
+    from src.ui.dashboard import DashboardPage
+    from src.ui.styles import inject_css
+except ImportError as e:
+    st.error(f"❌ Initialization Error: Check project structure. Details: {e}")
+    st.stop()
 
-# Configure the primary page settings.
+# 1. Page Configuration
 st.set_page_config(
     page_title="SamiX · Quality Auditor",
-    page_icon="👁",
+    page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# Import custom UI modules (Keep these light)
-try:
-    from src.auth.authenticator   import AuthManager
-    from src.ui.admin_panel        import AdminPanel
-    from src.ui.agent_panel        import AgentPanel
-    from src.ui.login_page         import LoginPage
-    from src.ui.styles             import inject_css
-    # Import the GroqClient we updated to act as a Proxy
-    from src.pipeline.groq_client  import GroqClient
-except ImportError as e:
-    st.error(f"❌ UI Import Error: {e}")
-    st.stop()
-
-# Apply custom CSS
-inject_css()
-
+# 2. Global Resources (Cached to prevent re-init on every rerun)
 @st.cache_resource
-def _init_client():
-    """ 
-    Initialize components in 'Client Mode'.
-    These now point to the BACKEND_URL instead of running locally.
-    """
-    return {
-        "groq": GroqClient(api_base=BACKEND_URL),
-        # Other managers will now be pass-throughs to API calls
-    }
+def get_api_client():
+    """Points to the Render URL defined in Streamlit Secrets or ENV."""
+    url = st.secrets.get("BACKEND_URL") or os.getenv("SAMIX_API_URL", "http://localhost:8000")
+    return SamiXClient(base_url=url)
 
-# Initialize resources
-R = _init_client()
-auth = AuthManager()
-backend_status = check_backend_health()
-
-def _sidebar_brand() -> None:
-    """ Renders sidebar with dynamic health status from the Render API. """
-    with st.sidebar:
-        _render_logo()
-        
-        st.markdown(
-            '<div style="text-align:center;margin-bottom:1rem;">'
-            '<div style="font-size:1.45rem;color:#FFFFFF;font-weight:800;">SamiX</div>'
-            '<div style="font-size:0.68rem;color:#93C5FD;text-transform:uppercase;">Support Quality Platform</div></div>',
-            unsafe_allow_html=True,
-        )
-        st.divider()
-
-        # Dynamic System Health Status (Pulled from Render API)
-        st.markdown('<div style="font-size:.7rem;font-weight:700;opacity:0.6;">SERVER STATUS</div>', unsafe_allow_html=True)
-        
-        if backend_status:
-            services = [
-                ("API Engine", "ONLINE", True),
-                ("Groq Live", "LIVE" if backend_status.get("groq_live") else "OFF", backend_status.get("groq_live")),
-                ("Deepgram", "READY" if backend_status.get("deepgram_live") else "OFF", backend_status.get("deepgram_live")),
-                ("Vector DB", "ACTIVE" if backend_status.get("vector_enabled") else "OFF", True),
-            ]
-        else:
-            services = [("Backend", "WAKING UP...", False)]
-
-        for svc, label, ok in services:
-            colour = "#10B981" if ok else "#F59E0B"
-            st.markdown(
-                f'<div style="display:flex;justify-content:space-between;font-size:.7rem;padding:4px 0;">'
-                f'<span>{svc}</span>'
-                f'<span style="color:{colour};font-weight:700;">● {label}</span></div>',
-                unsafe_allow_html=True,
-            )
-
-        st.divider()
-        st.markdown(f'<div style="font-size:.75rem;">Logged in as: <b>{auth.current_user_name}</b></div>', unsafe_allow_html=True)
-        auth.render_logout()
-
-def _render_logo():
-    logo_path = Path("assets/images/logo.png")
-    if logo_path.exists():
-        st.image(Image.open(logo_path), width=100)
-    else:
-        st.markdown('<div style="width:45px;height:45px;background:linear-gradient(135deg,#152EAE,#2563EB);border-radius:12px;margin:0 auto 1rem auto;display:flex;align-items:center;justify-content:center;"><span style="color:#fff;font-weight:800;">S</span></div>', unsafe_allow_html=True)
-
-def main() -> None:
-    if not auth.is_authenticated():
-        LoginPage(auth).render()
-        return
-
-    _sidebar_brand()
+def initialize_session():
+    """Syncs managers with the Streamlit session state."""
+    if "api_client" not in st.session_state:
+        st.session_state.api_client = get_api_client()
     
-    # Simple Role Selection
+    if "auth_manager" not in st.session_state:
+        st.session_state.auth_manager = AuthManager(get_db())
+    
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+
+# 3. Sidebar Branding & Health Status
+def render_sidebar_header(api: SamiXClient, auth: AuthManager):
+    """Renders the logo and real-time backend health check."""
     with st.sidebar:
-        view = st.radio("Navigation", ["Agent Workspace", "Admin Workspace"], label_visibility="collapsed")
+        # Logo Logic
+        logo_path = Path("assets/images/logo.png")
+        if logo_path.exists():
+            st.image(Image.open(logo_path), width=100)
+        else:
+            st.markdown('<div style="width:48px;height:48px;background:linear-gradient(135deg,#6366F1,#4F46E5);border-radius:12px;margin:0 auto 1rem auto;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 15px rgba(0,0,0,0.2);"><span style="color:#fff;font-weight:800;font-size:1.2rem;">S</span></div>', unsafe_allow_html=True)
+        
+        st.markdown('<div style="text-align:center;color:#F8FAFC;font-weight:800;font-size:1.3rem;letter-spacing:-0.02em;">SamiX</div>', unsafe_allow_html=True)
+        st.divider()
 
-    if not backend_status:
-        st.error("⚠️ The Backend Server is currently offline or waking up. Please refresh in 30 seconds.")
-        st.info("Render Free Tier sleeps after inactivity. Accessing the URL wakes it up.")
-        return
+        # Dynamic Backend Health
+        status = api.health()
+        st.markdown('<div style="font-size:.65rem;font-weight:700;color:#64748B;letter-spacing:0.1em;margin-bottom:8px;">BACKEND INFRASTRUCTURE</div>', unsafe_allow_html=True)
+        
+        if status.get("status") in ["healthy", "online"]:
+            st.success("● API Engine Online")
+            # Pull sub-service status if the API provides it
+            if "services" in status:
+                for svc, state in status["services"].items():
+                    color = "#10B981" if state else "#F59E0B"
+                    st.markdown(f'<div style="font-size:.7rem; display:flex; justify-content:space-between;"><span>{svc}</span><span style="color:{color}">●</span></div>', unsafe_allow_html=True)
+        else:
+            st.warning("● Backend Waking Up...")
+            st.caption("Render services sleep after 15m of inactivity. Please wait 30s.")
 
-    if view == "Admin Workspace":
-        AdminPanel(backend_url=BACKEND_URL).render()
+        st.divider()
+        
+        # User Info & Logout
+        if st.session_state.authenticated:
+            user_name = st.session_state.get("user_data", {}).get("name", "User")
+            st.markdown(f'<div style="font-size:.8rem; margin-bottom:10px;">User: <b>{user_name}</b></div>', unsafe_allow_html=True)
+            if st.button("Log Out", use_container_width=True, type="secondary"):
+                st.session_state.authenticated = False
+                st.rerun()
+
+# 4. Main Application Entry
+def main() -> None:
+    # Inject Custom Enterprise CSS
+    inject_css()
+    
+    # Run Initializers
+    initialize_session()
+    
+    api = st.session_state.api_client
+    auth = st.session_state.auth_manager
+
+    # --- ROUTING ---
+    if not st.session_state.authenticated:
+        # Show Auth Gateway if not logged in
+        LoginPage(auth).render()
     else:
-        AgentPanel(backend_url=BACKEND_URL, groq=R["groq"]).render()
+        # If logged in, check backend health first
+        health = api.health()
+        
+        # Render Sidebar (Health + Brand)
+        render_sidebar_header(api, auth)
+
+        # Main Workspace
+        if health.get("status") not in ["healthy", "online", "local"]:
+            st.error("⚠️ Connection to SamiX Backend failed.")
+            st.info("Check your BACKEND_URL in secrets or ensure the Render instance is active.")
+            if st.button("Try Reconnecting"):
+                st.rerun()
+        else:
+            # Launch DashboardPage (Handles role routing internally)
+            dashboard = DashboardPage(
+                history_manager=get_db(),
+                kb_manager=api
+            )
+            dashboard.render()
 
 if __name__ == "__main__":
     main()
