@@ -1,25 +1,21 @@
-# ── Core UI Framework ──
-streamlit>=1.35.0
-streamlit-authenticator>=0.3.2
-streamlit-echarts>=0.4.0
-audio-recorder-streamlit>=0.0.10
+# Core Web Framework
+streamlit>=1.32.0
 
-# ── Image & Visualization ──
-Pillow>=10.0.0
-pandas>=2.2.0
-numpy>=1.26.0
-plotly>=5.22.0
-
-# ── Backend Communication (The Bridge) ──
-requests>=2.32.0
+# API & Cloud Connectivity
 httpx>=0.27.0
+requests>=2.31.0
 python-dotenv>=1.0.1
 
-# ── Reporting & Export ──
-reportlab>=4.2.2
-openpyxl>=3.1.4
+# Data Processing & Analytics
+pandas>=2.2.0
+numpy>=1.26.0
 
-# ── Security & Auth Utilities ──
-bcrypt>=4.1.3
-PyYAML>=6.0.1
-pydantic>=2.6.1
+# Export & Reporting
+XlsxWriter>=3.1.9
+openpyxl>=3.1.2
+
+# Image Handling (Logo/Branding)
+Pillow>=10.2.0
+
+# Database (SQLAlchemy for the local SQLite layer)
+SQLAlchemy>=2.0.25
