@@ -4,23 +4,22 @@ Status: Production Ready - Streamlit Cloud to Render Sync
 """
 import os
 import uvicorn
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional
 
-# 1. Define Request Schema
+# 1. Define Request Schema for RAG
 class QueryRequest(BaseModel):
     question: str
 
 app = FastAPI(title="SamiX API Engine")
 
-# 2. CORS - This is the most important part for Streamlit Cloud
+# 2. GLOBAL CORS FIX
+# This allows your Streamlit Cloud app to bypass browser security blocks
 app.add_middleware(
     CORSMiddleware,
-    # Allow your specific Streamlit Cloud URL for security
-    # Or use ["*"] to allow all during testing
-    allow_origins=["*"], 
+    allow_origins=["*"],  # Allows all origins (Streamlit Cloud uses dynamic subdomains)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -28,7 +27,11 @@ app.add_middleware(
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "environment": "render-production"}
+    return {
+        "status": "healthy", 
+        "environment": "render-production",
+        "integration": "streamlit-cloud-ready"
+    }
 
 @app.post("/api/v1/audit")
 async def run_audit(
@@ -36,10 +39,10 @@ async def run_audit(
     agent_name: str = Form(...)
 ):
     try:
-        # Mocking the AI response
+        # Placeholder for Deepgram + Groq logic
         return {
             "score": 85,
-            "transcript": f"Auditing {file.filename} for {agent_name}...",
+            "transcript": f"Audited {file.filename} for {agent_name}.",
             "status": "success"
         }
     except Exception as e:
@@ -48,12 +51,11 @@ async def run_audit(
 @app.post("/api/v1/rag/query")
 async def query_kb(request: QueryRequest):
     return {
-        "answer": f"Found info for: {request.question}",
+        "answer": f"KB Result for: {request.question}",
         "sources": ["manual_2026.pdf"]
     }
 
 if __name__ == "__main__":
-    # Render provides a $PORT environment variable. 
-    # Usually, FastAPI apps on Render listen on 10000 or $PORT.
+    # Render dynamic port assignment
     port = int(os.getenv("PORT", 10000))
     uvicorn.run(app, host="0.0.0.0", port=port)
