@@ -13,6 +13,8 @@ This document explains how the SamiX system works under the hood, the core compo
 
 ## 🏗 The Decoupled System Architecture
 
+<img width="1408" height="768" alt="SamiX arch" src="https://github.com/user-attachments/assets/70f950ea-c744-45c7-a735-872e37e2022f" />
+
 SamiX operates using a **Client/Server separation** to maximize performance and reliability:
 
 1. **Frontend (Streamlit Client)**: A lightweight, responsive, lightning-fast UI. It handles authentication, data visualization (Plotly charts), audio recording, and session history management.
@@ -50,3 +52,5 @@ SamiX utilizes a textbook "Classic RAG" architecture to eliminate LLM hallucinat
 2. **Scalability**: You can deploy the Streamlit UI on a cheap Edge server (like Streamlit Community Cloud) and deploy the API on a dedicated machine where you can independently scale GPU/CPU power.
 3. **Platform Agnostic API**: Because the heavy lifting is exposed via a REST API (`/audit`), you can easily hook SamiX into *other* systems. Want a Slack bot that automatically audits calls? Just hit the API. Want to integrate into a CRM? Just hit the API.
 4. **Resiliency**: The system features graceful fallbacks at almost every layer (Deepgram → Whisper; Milvus Vector → BM25 Keyword matcher; API Backend → Local UI processing).
+
+
