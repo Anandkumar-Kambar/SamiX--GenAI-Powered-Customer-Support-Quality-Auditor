@@ -161,6 +161,7 @@ samix/
 
 ## 🔧 Configuration
 
+```
 ### Environment Variables (.env)
 ├── .gitignore
 ├── .streamlit/
