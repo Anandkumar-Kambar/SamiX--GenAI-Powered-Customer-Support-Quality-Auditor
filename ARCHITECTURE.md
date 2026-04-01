@@ -15,6 +15,8 @@ This document explains how the SamiX system works under the hood, the core compo
 
 <img width="1408" height="768" alt="SamiX arch" src="https://github.com/user-attachments/assets/70f950ea-c744-45c7-a735-872e37e2022f" />
 
+
+
 SamiX operates using a **Client/Server separation** to maximize performance and reliability:
 
 1. **Frontend (Streamlit Client)**: A lightweight, responsive, lightning-fast UI. It handles authentication, data visualization (Plotly charts), audio recording, and session history management.
